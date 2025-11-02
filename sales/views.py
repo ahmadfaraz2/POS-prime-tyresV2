@@ -1,18 +1,120 @@
 from decimal import Decimal
+from datetime import datetime, timedelta
+import csv
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, F
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 from .models import Sale, InstallmentPlan, InstallmentPayment
 
 
 @login_required
 def sale_list(request):
+    # Get filter parameter
+    date_filter = request.GET.get('filter', 'all')
+    
+    # Start with base queryset
     qs = Sale.objects.select_related('customer').order_by('-date')
+    
+    # Apply date filters
+    now = timezone.now()
+    if date_filter == 'today':
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        qs = qs.filter(date__gte=start_date)
+    elif date_filter == 'week':
+        start_date = now - timedelta(days=now.weekday())  # Monday of current week
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        qs = qs.filter(date__gte=start_date)
+    elif date_filter == 'month':
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        qs = qs.filter(date__gte=start_date)
+    
+    # Calculate totals for display
+    total_sales = qs.count()
+    total_revenue = qs.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    
     page_obj = Paginator(qs, 10).get_page(request.GET.get('page'))
-    return render(request, 'sales/sale_list.html', {'page_obj': page_obj})
+    
+    return render(request, 'sales/sale_list.html', {
+        'page_obj': page_obj,
+        'date_filter': date_filter,
+        'total_sales': total_sales,
+        'total_revenue': total_revenue,
+    })
+
+
+@login_required
+def export_sales_csv(request):
+    # Get filter parameter
+    date_filter = request.GET.get('filter', 'all')
+    
+    # Start with base queryset
+    qs = Sale.objects.select_related('customer', 'created_by').prefetch_related('items__product').order_by('-date')
+    
+    # Apply date filters
+    now = timezone.now()
+    if date_filter == 'today':
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        qs = qs.filter(date__gte=start_date)
+    elif date_filter == 'week':
+        start_date = now - timedelta(days=now.weekday())
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        qs = qs.filter(date__gte=start_date)
+    elif date_filter == 'month':
+        start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        qs = qs.filter(date__gte=start_date)
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    filename = f'sales_{date_filter}_{now.strftime("%Y%m%d_%H%M%S")}.csv'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    writer = csv.writer(response)
+    
+    # Write header
+    writer.writerow([
+        'Sale ID',
+        'Date',
+        'Time',
+        'Customer Name',
+        'Customer Phone',
+        'Customer Email',
+        'Payment Type',
+        'Total Amount (Rs)',
+        'Status',
+        'Processed By',
+        'Items Count',
+        'Items Details'
+    ])
+    
+    # Write data
+    for sale in qs:
+        # Get items details
+        items_details = '; '.join([
+            f"{item.product.name} (Qty: {item.quantity}, Price: Rs {item.unit_price})"
+            for item in sale.items.all()
+        ])
+        
+        writer.writerow([
+            sale.id,
+            sale.date.strftime('%Y-%m-%d'),
+            sale.date.strftime('%H:%M:%S'),
+            sale.customer.name,
+            sale.customer.phone or '',
+            sale.customer.email or '',
+            sale.get_payment_type_display(),
+            str(sale.total_amount),
+            'Completed' if sale.is_completed else 'Pending',
+            sale.created_by.username,
+            sale.items.count(),
+            items_details
+        ])
+    
+    return response
 
 
 @login_required
