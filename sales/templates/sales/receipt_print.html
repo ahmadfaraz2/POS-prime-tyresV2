@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load form_tags %}
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -342,8 +343,8 @@
             <td>{{ forloop.counter }}</td>
             <td>{{ item.product.name }}</td>
             <td>{{ item.quantity }}</td>
-            <td class="text-right">Rs {{ item.unit_price }}</td>
-            <td class="text-right">Rs {{ item.subtotal }}</td>
+            <td class="text-right">Rs {{ item.unit_price|currency }}</td>
+            <td class="text-right">Rs {{ item.subtotal|currency }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -353,11 +354,11 @@
       <div class="totals">
         <div class="row">
           <div class="label">Subtotal:</div>
-          <div class="value">Rs {{ sale.total_amount }}</div>
+          <div class="value">Rs {{ sale.total_amount|currency }}</div>
         </div>
         <div class="row total-row">
           <div class="label">Total Amount:</div>
-          <div class="value">Rs {{ sale.total_amount }}</div>
+          <div class="value">Rs {{ sale.total_amount|currency }}</div>
         </div>
       </div>
 
@@ -369,7 +370,7 @@
           <strong>Total Installments:</strong> {{ sale.installment_plan.total_installments }}
         </div>
         <div class="detail">
-          <strong>Installment Amount:</strong> Rs {{ sale.installment_plan.installment_amount }} per installment
+          <strong>Installment Amount:</strong> Rs {{ sale.installment_plan.installment_amount|currency }} per installment
         </div>
         <div class="detail">
           <strong>First Due Date:</strong> {{ sale.installment_plan.first_due_date|date:"F d, Y" }}
@@ -399,7 +400,7 @@
               <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ payment.payment_date|date:"F d, Y" }}</td>
-                <td>Rs {{ payment.amount_paid }}</td>
+                <td>Rs {{ payment.amount_paid|currency }}</td>
               </tr>
               {% endfor %}
             </tbody>

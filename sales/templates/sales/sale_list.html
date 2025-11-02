@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load form_tags %}
 {% block title %}Sales{% endblock %}
 {% block content %}
 <!-- Header with Title -->
@@ -63,7 +64,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-green-600 font-medium">Total Revenue</p>
-          <p class="text-2xl font-bold text-green-900">Rs {{ total_revenue }}</p>
+          <p class="text-2xl font-bold text-green-900">Rs {{ total_revenue|currency }}</p>
         </div>
         <div class="bg-green-200 p-3 rounded-lg">
           <svg class="w-8 h-8 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +122,7 @@
             {% endif %}
           </td>
           <td class="p-4">
-            <span class="text-lg font-bold text-gray-900">Rs {{ s.total_amount }}</span>
+            <span class="text-lg font-bold text-gray-900">Rs {{ s.total_amount|currency }}</span>
           </td>
           <td class="p-4 text-center">
             <div class="flex items-center justify-center gap-2">

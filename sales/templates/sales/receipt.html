@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load form_tags %}
 {% block title %}Receipt #{{ sale.id }}{% endblock %}
 {% block content %}
 <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow print:shadow-none">
@@ -28,14 +29,14 @@
         <tr class="border-t">
           <td class="p-3">{{ item.product.name }}</td>
           <td class="p-3">{{ item.quantity }}</td>
-          <td class="p-3">Rs {{ item.unit_price }}</td>
-          <td class="p-3">Rs {{ item.subtotal }}</td>
+          <td class="p-3">Rs {{ item.unit_price|currency }}</td>
+          <td class="p-3">Rs {{ item.subtotal|currency }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <div class="text-right mt-3">Total: <strong>Rs {{ sale.total_amount }}</strong></div>
+  <div class="text-right mt-3">Total: <strong>Rs {{ sale.total_amount|currency }}</strong></div>
 </div>
 <style>
 @media print {

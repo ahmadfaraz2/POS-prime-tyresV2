@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load form_tags %}
 {% block title %}Products{% endblock %}
 {% block content %}
 <!-- Header Section -->
@@ -57,7 +58,7 @@
             </div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-lg font-bold text-gray-900">Rs {{ product.price }}</div>
+            <div class="text-lg font-bold text-gray-900">Rs {{ product.price|currency }}</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="text-sm font-semibold text-gray-900">{{ product.stock_quantity }} units</div>

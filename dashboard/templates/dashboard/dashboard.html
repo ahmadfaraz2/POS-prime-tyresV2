@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load form_tags %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <h1 class="text-2xl font-semibold mb-6">Dashboard</h1>
@@ -9,7 +10,7 @@
   </div>
   <div class="bg-white p-4 rounded shadow">
     <div class="text-sm text-gray-600">Total Revenue</div>
-    <div class="text-3xl font-semibold">Rs {{ revenue }}</div>
+    <div class="text-3xl font-semibold">Rs {{ revenue|currency }}</div>
   </div>
   <div class="bg-white p-4 rounded shadow">
     <div class="text-sm text-gray-600">Products</div>
@@ -23,7 +24,7 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
   <div class="bg-white p-4 rounded shadow">
     <div class="text-sm text-gray-600">Outstanding Installments</div>
-    <div class="text-2xl font-semibold">Rs {{ outstanding_installments }}</div>
+    <div class="text-2xl font-semibold">Rs {{ outstanding_installments|currency }}</div>
   </div>
 </div>
 {% endblock %}
