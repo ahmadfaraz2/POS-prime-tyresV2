@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Delete Customer{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-6 rounded shadow">
+  <h1 class="text-xl font-semibold mb-4">Confirm Delete</h1>
+  <p>Are you sure you want to delete <strong>{{ customer.name }}</strong>?</p>
+  <form method="post" class="mt-4 flex gap-2">
+    {% csrf_token %}
+    <button class="bg-red-600 text-white px-4 py-2 rounded">Delete</button>
+    <a href="{% url 'customers:customer_list' %}" class="px-4 py-2 border rounded">Cancel</a>
+  </form>
+</div>
+{% endblock %}

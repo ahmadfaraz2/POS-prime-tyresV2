@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Customers</h1>
+  <a href="{% url 'customers:customer_create' %}" class="bg-green-600 text-white px-4 py-2 rounded">Add Customer</a>
+</div>
+<div class="bg-white rounded shadow overflow-hidden">
+  <table class="w-full">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="text-left p-3">Name</th>
+        <th class="text-left p-3">Phone</th>
+        <th class="text-left p-3">Email</th>
+        <th class="p-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in page_obj.object_list %}
+        <tr class="border-t">
+          <td class="p-3">{{ c.name }}</td>
+          <td class="p-3">{{ c.phone|default:'-' }}</td>
+          <td class="p-3">{{ c.email|default:'-' }}</td>
+          <td class="p-3 text-right">
+            <a href="{% url 'customers:customer_update' c.id %}" class="text-blue-600">Edit</a>
+            <a href="{% url 'customers:customer_delete' c.id %}" class="text-red-600 ml-3">Delete</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="p-4 text-center">No customers yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<!-- Pagination -->
+<div class="mt-6 flex justify-center gap-2">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 border rounded">Prev</a>
+  {% endif %}
+  <span class="px-3 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 border rounded">Next</a>
+  {% endif %}
+</div>
+{% endblock %}

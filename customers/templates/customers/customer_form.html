@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}{% if customer %}Edit Customer{% else %}Create Customer{% endif %}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+  <h1 class="text-xl font-semibold mb-4">{% if customer %}Edit{% else %}Create{% endif %} Customer</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium">Name</label>
+        <input name="name" value="{{ customer.name|default:'' }}" class="w-full border rounded px-3 py-2" required />
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Phone</label>
+        <input name="phone" value="{{ customer.phone|default:'' }}" class="w-full border rounded px-3 py-2" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Email</label>
+        <input type="email" name="email" value="{{ customer.email|default:'' }}" class="w-full border rounded px-3 py-2" />
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium">Address</label>
+        <textarea name="address" class="w-full border rounded px-3 py-2">{{ customer.address|default:'' }}</textarea>
+      </div>
+    </div>
+    <div class="mt-6 flex gap-2">
+      <button class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+      <a href="{% url 'customers:customer_list' %}" class="px-4 py-2 border rounded">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

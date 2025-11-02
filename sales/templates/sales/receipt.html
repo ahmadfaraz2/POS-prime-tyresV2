@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Receipt #{{ sale.id }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow print:shadow-none">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-semibold">Receipt #{{ sale.id }}</h1>
+    <a href="{% url 'sales:receipt_print' sale.id %}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded print:hidden flex items-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+      </svg>
+      Print Receipt (3 Copies)
+    </a>
+  </div>
+  <div class="mt-4 text-sm text-gray-600">Date: {{ sale.date|date:"Y-m-d H:i" }}</div>
+  <div class="mt-1">Customer: <strong>{{ sale.customer.name }}</strong></div>
+  <div class="mt-6 overflow-hidden rounded border">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="text-left p-3">Product</th>
+          <th class="text-left p-3">Qty</th>
+          <th class="text-left p-3">Unit Price</th>
+          <th class="text-left p-3">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in sale.items.all %}
+        <tr class="border-t">
+          <td class="p-3">{{ item.product.name }}</td>
+          <td class="p-3">{{ item.quantity }}</td>
+          <td class="p-3">Rs {{ item.unit_price }}</td>
+          <td class="p-3">Rs {{ item.subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="text-right mt-3">Total: <strong>Rs {{ sale.total_amount }}</strong></div>
+</div>
+<style>
+@media print {
+  .print\:hidden { display: none; }
+  .print\:shadow-none { box-shadow: none; }
+}
+</style>
+{% endblock %}

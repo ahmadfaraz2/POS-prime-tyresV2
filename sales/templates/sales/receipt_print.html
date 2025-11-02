@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt #{{ sale.id }} - Print</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 15mm;
+      background: white;
+      position: relative;
+      page-break-after: always;
+      border-bottom: 1px dashed #ccc;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    /* Watermark Stamp */
+    .watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 80px;
+      font-weight: bold;
+      opacity: 0.15;
+      z-index: 1;
+      pointer-events: none;
+      text-transform: uppercase;
+      letter-spacing: 5px;
+    }
+
+    .watermark.paid {
+      color: #059669;
+    }
+
+    .watermark.pending {
+      color: #dc2626;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 3px solid #000;
+      padding-bottom: 15px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 5px;
+      color: #1f2937;
+    }
+
+    .header .company-info {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 5px;
+    }
+
+    .copy-label {
+      position: absolute;
+      top: 15mm;
+      right: 15mm;
+      background: #3b82f6;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .receipt-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      font-size: 13px;
+    }
+
+    .receipt-info .section {
+      flex: 1;
+    }
+
+    .receipt-info .label {
+      font-weight: bold;
+      color: #374151;
+      margin-bottom: 5px;
+    }
+
+    .receipt-info .value {
+      color: #6b7280;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13px;
+    }
+
+    .items-table thead {
+      background: #f3f4f6;
+      border-top: 2px solid #000;
+      border-bottom: 2px solid #000;
+    }
+
+    .items-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: bold;
+      color: #1f2937;
+    }
+
+    .items-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #374151;
+    }
+
+    .items-table tbody tr:last-child td {
+      border-bottom: 2px solid #000;
+    }
+
+    .items-table .text-right {
+      text-align: right;
+    }
+
+    .totals {
+      margin-top: 20px;
+      text-align: right;
+    }
+
+    .totals .row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .totals .label {
+      margin-right: 30px;
+      color: #6b7280;
+      min-width: 150px;
+      text-align: right;
+    }
+
+    .totals .value {
+      min-width: 120px;
+      text-align: right;
+      font-weight: bold;
+      color: #1f2937;
+    }
+
+    .totals .total-row {
+      border-top: 2px solid #000;
+      padding-top: 10px;
+      margin-top: 10px;
+      font-size: 18px;
+    }
+
+    .totals .total-row .value {
+      color: #059669;
+    }
+
+    .payment-info {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .payment-info .title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #1f2937;
+      font-size: 14px;
+    }
+
+    .payment-info .detail {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 5px;
+    }
+
+    .installment-schedule {
+      margin-top: 20px;
+    }
+
+    .installment-schedule table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .installment-schedule th,
+    .installment-schedule td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .installment-schedule th {
+      background: #f3f4f6;
+      font-weight: bold;
+      color: #374151;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 15mm;
+      left: 15mm;
+      right: 15mm;
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 10px;
+    }
+
+    .signatures {
+      margin-top: 50px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .signature-box {
+      text-align: center;
+      flex: 1;
+    }
+
+    .signature-line {
+      border-top: 2px solid #000;
+      margin-top: 40px;
+      padding-top: 5px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .page {
+        border-bottom: none;
+        page-break-after: always;
+      }
+      
+      .page:last-child {
+        page-break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% for copy_label in copy_labels %}
+  <div class="page">
+    <!-- Watermark Stamp -->
+    <div class="watermark {% if sale.payment_type == 'FULL' or sale.installment_plan.status == 'PAID' %}paid{% else %}pending{% endif %}">
+      {% if sale.payment_type == 'FULL' or sale.installment_plan.status == 'PAID' %}PAID{% else %}PENDING{% endif %}
+    </div>
+
+    <div class="content">
+      <!-- Copy Label -->
+      <div class="copy-label">{{ copy_label }}</div>
+
+      <!-- Header -->
+      <div class="header">
+        <h1>SALES RECEIPT</h1>
+        <div class="company-info">
+          Your Company Name | Address Line 1, City | Phone: (123) 456-7890 | Email: info@company.com
+        </div>
+      </div>
+
+      <!-- Receipt Information -->
+      <div class="receipt-info">
+        <div class="section">
+          <div class="label">Receipt No:</div>
+          <div class="value">#{{ sale.id }}</div>
+          <div class="label" style="margin-top: 10px;">Date:</div>
+          <div class="value">{{ sale.date|date:"F d, Y" }}</div>
+          <div class="value">{{ sale.date|date:"h:i A" }}</div>
+        </div>
+        <div class="section">
+          <div class="label">Customer:</div>
+          <div class="value">{{ sale.customer.name }}</div>
+          <div class="label" style="margin-top: 10px;">Contact:</div>
+          <div class="value">{{ sale.customer.phone }}</div>
+          <div class="value">{{ sale.customer.email }}</div>
+        </div>
+        <div class="section">
+          <div class="label">Payment Type:</div>
+          <div class="value">{{ sale.get_payment_type_display }}</div>
+          <div class="label" style="margin-top: 10px;">Processed By:</div>
+          <div class="value">{{ sale.created_by.username }}</div>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th style="width: 10%;">#</th>
+            <th style="width: 45%;">Product</th>
+            <th style="width: 15%;">Quantity</th>
+            <th style="width: 15%;" class="text-right">Unit Price</th>
+            <th style="width: 15%;" class="text-right">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in sale.items.all %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td class="text-right">Rs {{ item.unit_price }}</td>
+            <td class="text-right">Rs {{ item.subtotal }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- Totals -->
+      <div class="totals">
+        <div class="row">
+          <div class="label">Subtotal:</div>
+          <div class="value">Rs {{ sale.total_amount }}</div>
+        </div>
+        <div class="row total-row">
+          <div class="label">Total Amount:</div>
+          <div class="value">Rs {{ sale.total_amount }}</div>
+        </div>
+      </div>
+
+      <!-- Payment Information -->
+      {% if sale.payment_type == 'INSTALLMENT' %}
+      <div class="payment-info">
+        <div class="title">📋 Installment Payment Plan</div>
+        <div class="detail">
+          <strong>Total Installments:</strong> {{ sale.installment_plan.total_installments }}
+        </div>
+        <div class="detail">
+          <strong>Installment Amount:</strong> Rs {{ sale.installment_plan.installment_amount }} per installment
+        </div>
+        <div class="detail">
+          <strong>First Due Date:</strong> {{ sale.installment_plan.first_due_date|date:"F d, Y" }}
+        </div>
+        <div class="detail">
+          <strong>Status:</strong> 
+          {% if sale.installment_plan.status == 'PAID' %}
+            <span style="color: #059669; font-weight: bold;">✓ PAID</span>
+          {% else %}
+            <span style="color: #dc2626; font-weight: bold;">⏳ PENDING</span>
+          {% endif %}
+        </div>
+
+        {% if payments %}
+        <div class="installment-schedule">
+          <div class="title">Payment History</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Payment No.</th>
+                <th>Date</th>
+                <th>Amount Paid</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for payment in payments %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ payment.payment_date|date:"F d, Y" }}</td>
+                <td>Rs {{ payment.amount_paid }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="payment-info">
+        <div class="title">✓ Payment Status: PAID IN FULL</div>
+        <div class="detail">This invoice has been paid in full at the time of sale.</div>
+      </div>
+      {% endif %}
+
+      <!-- Signatures -->
+      <div class="signatures">
+        <div class="signature-box">
+          <div class="signature-line">Customer Signature</div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-line">Authorized Signature</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>Thank you for your business!</p>
+        <p>This is a computer-generated receipt. For any queries, please contact us.</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <script>
+    // Auto print when page loads
+    window.onload = function() {
+      window.print();
+    }
+  </script>
+</body>
+</html>

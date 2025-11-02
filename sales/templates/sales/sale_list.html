@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Sales{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Sales</h1>
+</div>
+<div class="bg-white rounded shadow overflow-hidden">
+  <table class="w-full">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="text-left p-3">#</th>
+        <th class="text-left p-3">Customer</th>
+        <th class="text-left p-3">Date</th>
+        <th class="text-left p-3">Payment</th>
+        <th class="text-left p-3">Total</th>
+        <th class="p-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in page_obj.object_list %}
+        <tr class="border-t">
+          <td class="p-3">{{ s.id }}</td>
+          <td class="p-3">{{ s.customer.name }}</td>
+          <td class="p-3">{{ s.date|date:"Y-m-d H:i" }}</td>
+          <td class="p-3">{{ s.payment_type }}</td>
+          <td class="p-3">Rs {{ s.total_amount }}</td>
+          <td class="p-3 text-right">
+            <a href="{% url 'sales:sale_detail' s.id %}" class="text-blue-600">View</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="p-4 text-center">No sales yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<!-- Pagination -->
+<div class="mt-6 flex justify-center gap-2">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 border rounded">Prev</a>
+  {% endif %}
+  <span class="px-3 py-1">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 border rounded">Next</a>
+  {% endif %}
+</div>
+{% endblock %}
