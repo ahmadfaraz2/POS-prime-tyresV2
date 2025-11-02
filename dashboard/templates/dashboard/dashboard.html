@@ -2,29 +2,299 @@
 {% load form_tags %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-semibold mb-6">Dashboard</h1>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-  <div class="bg-white p-4 rounded shadow">
-    <div class="text-sm text-gray-600">Sales Today</div>
-    <div class="text-3xl font-semibold">{{ sales_today }}</div>
-  </div>
-  <div class="bg-white p-4 rounded shadow">
-    <div class="text-sm text-gray-600">Total Revenue</div>
-    <div class="text-3xl font-semibold">Rs {{ revenue|currency }}</div>
-  </div>
-  <div class="bg-white p-4 rounded shadow">
-    <div class="text-sm text-gray-600">Products</div>
-    <div class="text-3xl font-semibold">{{ total_products }}</div>
-  </div>
-  <div class="bg-white p-4 rounded shadow">
-    <div class="text-sm text-gray-600">Customers</div>
-    <div class="text-3xl font-semibold">{{ total_customers }}</div>
+<!-- Header -->
+<div class="mb-8">
+  <h1 class="text-4xl font-bold text-gray-800">Dashboard</h1>
+  <p class="text-gray-600 mt-2">Welcome back! Here's what's happening with your store today.</p>
+</div>
+
+<!-- Today's Statistics -->
+<div class="mb-6">
+  <h2 class="text-xl font-bold text-gray-800 mb-3">📊 Today's Overview</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Sales Today -->
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-4 text-white transform hover:scale-105 transition-transform duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-blue-100 text-xs font-medium uppercase tracking-wide">Sales Today</p>
+          <p class="text-2xl font-bold mt-1">{{ sales_today }}</p>
+          <p class="text-blue-100 text-xs mt-1">Rs {{ sales_today_revenue|currency }}</p>
+        </div>
+        <div class="bg-blue-400 bg-opacity-30 p-2 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- This Week -->
+    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md p-4 text-white transform hover:scale-105 transition-transform duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-green-100 text-xs font-medium uppercase tracking-wide">This Week</p>
+          <p class="text-2xl font-bold mt-1">{{ sales_this_week }}</p>
+          <p class="text-green-100 text-xs mt-1">Rs {{ sales_this_week_revenue|currency }}</p>
+        </div>
+        <div class="bg-green-400 bg-opacity-30 p-2 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- This Month -->
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md p-4 text-white transform hover:scale-105 transition-transform duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-purple-100 text-xs font-medium uppercase tracking-wide">This Month</p>
+          <p class="text-2xl font-bold mt-1">{{ sales_this_month }}</p>
+          <p class="text-purple-100 text-xs mt-1">Rs {{ sales_this_month_revenue|currency }}</p>
+        </div>
+        <div class="bg-purple-400 bg-opacity-30 p-2 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Revenue -->
+    <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-md p-4 text-white transform hover:scale-105 transition-transform duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-yellow-100 text-xs font-medium uppercase tracking-wide">Total Revenue</p>
+          <p class="text-2xl font-bold mt-1">Rs {{ total_revenue|currency }}</p>
+          <p class="text-yellow-100 text-xs mt-1">All time</p>
+        </div>
+        <div class="bg-yellow-400 bg-opacity-30 p-2 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-  <div class="bg-white p-4 rounded shadow">
-    <div class="text-sm text-gray-600">Outstanding Installments</div>
-    <div class="text-2xl font-semibold">Rs {{ outstanding_installments|currency }}</div>
+
+<!-- Secondary Statistics -->
+<div class="mb-8">
+  <h2 class="text-2xl font-bold text-gray-800 mb-4">📈 Business Metrics</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Total Products -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-sm font-medium">Total Products</p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">{{ total_products }}</p>
+        </div>
+        <div class="bg-blue-100 p-3 rounded-lg">
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+          </svg>
+        </div>
+      </div>
+      <a href="{% url 'products:product_list' %}" class="text-blue-600 text-sm font-medium mt-4 inline-flex items-center hover:text-blue-700">
+        View all products
+        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Total Customers -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-sm font-medium">Total Customers</p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">{{ total_customers }}</p>
+        </div>
+        <div class="bg-green-100 p-3 rounded-lg">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+        </div>
+      </div>
+      <a href="{% url 'customers:customer_list' %}" class="text-green-600 text-sm font-medium mt-4 inline-flex items-center hover:text-green-700">
+        View all customers
+        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-orange-500 hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-sm font-medium">Low Stock Items</p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">{{ low_stock_products }}</p>
+        </div>
+        <div class="bg-orange-100 p-3 rounded-lg">
+          <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+        </div>
+      </div>
+      <p class="text-orange-600 text-sm font-medium mt-4">⚠️ Requires attention</p>
+    </div>
+
+    <!-- Pending Installments -->
+    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500 hover:shadow-lg transition-shadow duration-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-gray-600 text-sm font-medium">Pending Installments</p>
+          <p class="text-3xl font-bold text-gray-800 mt-2">{{ pending_installments }}</p>
+          <p class="text-sm text-gray-500 mt-1">Rs {{ outstanding_installments|currency }}</p>
+        </div>
+        <div class="bg-red-100 p-3 rounded-lg">
+          <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+      </div>
+      <a href="{% url 'sales:installment_list' %}" class="text-red-600 text-sm font-medium mt-4 inline-flex items-center hover:text-red-700">
+        View installments
+        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="mb-8">
+  <h2 class="text-2xl font-bold text-gray-800 mb-4">⚡ Quick Actions</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <a href="{% url 'products:product_create' %}" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 border-2 border-transparent hover:border-blue-500">
+      <div class="flex items-center">
+        <div class="bg-blue-100 p-3 rounded-lg">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="font-semibold text-gray-800">Add Product</p>
+          <p class="text-sm text-gray-500">New inventory</p>
+        </div>
+      </div>
+    </a>
+
+    <a href="{% url 'customers:customer_create' %}" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 border-2 border-transparent hover:border-green-500">
+      <div class="flex items-center">
+        <div class="bg-green-100 p-3 rounded-lg">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="font-semibold text-gray-800">Add Customer</p>
+          <p class="text-sm text-gray-500">New customer</p>
+        </div>
+      </div>
+    </a>
+
+    <a href="{% url 'products:product_list' %}" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 border-2 border-transparent hover:border-purple-500">
+      <div class="flex items-center">
+        <div class="bg-purple-100 p-3 rounded-lg">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="font-semibold text-gray-800">Start Sale</p>
+          <p class="text-sm text-gray-500">Add to cart</p>
+        </div>
+      </div>
+    </a>
+
+    <a href="{% url 'sales:sale_list' %}" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 border-2 border-transparent hover:border-orange-500">
+      <div class="flex items-center">
+        <div class="bg-orange-100 p-3 rounded-lg">
+          <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="font-semibold text-gray-800">View Reports</p>
+          <p class="text-sm text-gray-500">Sales history</p>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- Recent Sales -->
+<div class="mb-8">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-2xl font-bold text-gray-800">🛒 Recent Sales</h2>
+    <a href="{% url 'sales:sale_list' %}" class="text-blue-600 font-medium hover:text-blue-700 inline-flex items-center">
+      View all
+      <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </a>
+  </div>
+  <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Sale ID</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Customer</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Amount</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Payment</th>
+          <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        {% for sale in recent_sales %}
+        <tr class="hover:bg-gray-50 transition-colors duration-150">
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="font-semibold text-gray-900">#{{ sale.id }}</span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="font-medium text-gray-900">{{ sale.customer.name }}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">{{ sale.date|date:"M d, Y" }}</div>
+            <div class="text-xs text-gray-500">{{ sale.date|date:"h:i A" }}</div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="text-lg font-bold text-gray-900">Rs {{ sale.total_amount|currency }}</span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            {% if sale.payment_type == 'FULL' %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                Full
+              </span>
+            {% else %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                Installment
+              </span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-center">
+            <a href="{% url 'sales:sale_detail' sale.id %}" class="inline-flex items-center px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md font-medium transition-colors duration-200">
+              View
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No sales yet</h3>
+            <p class="mt-1 text-sm text-gray-500">Start by making your first sale!</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
 {% endblock %}
