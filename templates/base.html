@@ -11,7 +11,8 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
   <div class="flex min-h-screen">
-    <!-- Sidebar -->
+    <!-- Sidebar Desktop -->
+    {% if request.user.is_authenticated %}
     <aside class="w-64 bg-white border-r hidden md:block">
       <div class="p-4 font-semibold text-xl">ShopProject</div>
       <nav class="p-2 space-y-1">
@@ -23,15 +24,48 @@
       </nav>
     </aside>
 
+    <!-- Mobile Sidebar -->
+    <div id="mobileSidebar" class="fixed inset-0 z-50 md:hidden hidden">
+      <!-- Backdrop -->
+      <div id="sidebarBackdrop" class="absolute inset-0 bg-black bg-opacity-50"></div>
+      
+      <!-- Sidebar content -->
+      <aside class="absolute top-0 left-0 w-64 h-full bg-white border-r shadow-xl transform transition-transform duration-300 -translate-x-full" id="sidebarContent">
+        <div class="p-4 flex items-center justify-between border-b">
+          <span class="font-semibold text-xl">ShopProject</span>
+          <button id="closeSidebar" class="p-1 rounded hover:bg-gray-100">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <nav class="p-2 space-y-1">
+          <a href="{% url 'dashboard:dashboard_view' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Dashboard</a>
+          <a href="{% url 'products:product_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Products</a>
+          <a href="{% url 'customers:customer_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Customers</a>
+          <a href="{% url 'sales:sale_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Sales</a>
+          <a href="{% url 'sales:installment_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Installments</a>
+        </nav>
+      </aside>
+    </div>
+    {% endif %}
+
     <!-- Main content -->
     <div class="flex-1 flex flex-col">
       <!-- Top Nav -->
       <header class="bg-white border-b">
         <div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-          <div class="md:hidden">
-            <!-- Mobile menu toggle placeholder -->
+          <div class="flex items-center gap-3">
+            <!-- Hamburger Menu Button -->
+            {% if request.user.is_authenticated %}
+            <button id="hamburgerBtn" class="md:hidden p-2 rounded hover:bg-gray-100">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+            {% endif %}
+            <div class="text-lg font-medium">{% block header_title %}{% endblock %}</div>
           </div>
-          <div class="text-lg font-medium">{% block header_title %}{% endblock %}</div>
           <div class="flex items-center gap-3">
             {% if request.user.is_authenticated %}
               <span class="text-sm text-gray-600">Hi, {{ request.user.username }}</span>
@@ -61,6 +95,36 @@
       </main>
     </div>
   </div>
+
+  <script>
+    // Mobile sidebar toggle functionality
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+    const sidebarContent = document.getElementById('sidebarContent');
+    const closeSidebar = document.getElementById('closeSidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+    if (hamburgerBtn) {
+      // Open sidebar
+      hamburgerBtn.addEventListener('click', () => {
+        mobileSidebar.classList.remove('hidden');
+        setTimeout(() => {
+          sidebarContent.classList.remove('-translate-x-full');
+        }, 10);
+      });
+
+      // Close sidebar
+      const closeSidebarHandler = () => {
+        sidebarContent.classList.add('-translate-x-full');
+        setTimeout(() => {
+          mobileSidebar.classList.add('hidden');
+        }, 300);
+      };
+
+      closeSidebar.addEventListener('click', closeSidebarHandler);
+      sidebarBackdrop.addEventListener('click', closeSidebarHandler);
+    }
+  </script>
 
   {% block extra_js %}{% endblock %}
 </body>

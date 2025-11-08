@@ -4,8 +4,9 @@
 {% block content %}
 <h1 class="text-2xl font-semibold mb-4">Installment Plans</h1>
 <div class="bg-white rounded shadow overflow-hidden">
-  <table class="w-full">
-    <thead class="bg-gray-50">
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-gray-50">
       <tr>
         <th class="text-left p-3">Sale #</th>
         <th class="text-left p-3">Customer</th>
@@ -38,6 +39,7 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </div>
 <!-- Pagination -->
 <div class="mt-6 flex justify-center gap-2">
