@@ -5,6 +5,7 @@ app_name = 'sales'
 
 urlpatterns = [
     path('', views.sale_list, name='sale_list'),
+    # path('ledger/', views.ledger_view, name='ledger'),
     path('export/', views.export_sales_csv, name='export_csv'),
     path('<int:pk>/', views.sale_detail, name='sale_detail'),
     path('installments/', views.installment_list, name='installment_list'),

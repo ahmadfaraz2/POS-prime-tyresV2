@@ -209,3 +209,103 @@ def print_receipt_full(request, sale_id):
         'payments': payments,
         'copy_labels': copy_labels,
     })
+
+
+# @login_required
+# def ledger_view(request):
+#     """General ledger combining sales (debits) and installment payments (credits).
+#     Shows running balance. Optional filters: customer, start_date, end_date, payment_type.
+#     Balance interpretation: Each sale increases (debit) the receivable balance; each installment payment decreases it.
+#     """
+#     customer_id = request.GET.get('customer')
+#     start_date = request.GET.get('start')
+#     end_date = request.GET.get('end')
+#     payment_type = request.GET.get('payment_type')  # FULL or INSTALLMENT
+
+#     entries = []
+
+#     sales_qs = Sale.objects.select_related('customer').order_by('date')
+#     if customer_id:
+#         sales_qs = sales_qs.filter(customer_id=customer_id)
+#     if payment_type in ('FULL', 'INSTALLMENT'):
+#         sales_qs = sales_qs.filter(payment_type=payment_type)
+#     if start_date:
+#         try:
+#             dt_start = datetime.strptime(start_date, '%Y-%m-%d')
+#             sales_qs = sales_qs.filter(date__gte=dt_start)
+#         except ValueError:
+#             pass
+#     if end_date:
+#         try:
+#             dt_end = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+#             sales_qs = sales_qs.filter(date__lt=dt_end)
+#         except ValueError:
+#             pass
+
+#     for s in sales_qs:
+#         entries.append({
+#             'date': s.date,
+#             'type': 'SALE',
+#             'ref': s.id,
+#             'customer': s.customer.name,
+#             'description': f"Sale #{s.id} ({s.get_payment_type_display()})",
+#             'debit': s.total_amount,
+#             'credit': Decimal('0'),
+#         })
+
+#     pay_qs = InstallmentPayment.objects.select_related('plan__sale__customer', 'plan').order_by('payment_date')
+#     if customer_id:
+#         pay_qs = pay_qs.filter(plan__sale__customer_id=customer_id)
+#     if start_date:
+#         try:
+#             dt_start = datetime.strptime(start_date, '%Y-%m-%d')
+#             pay_qs = pay_qs.filter(payment_date__gte=dt_start.date())
+#         except ValueError:
+#             pass
+#     if end_date:
+#         try:
+#             dt_end = datetime.strptime(end_date, '%Y-%m-%d')
+#             pay_qs = pay_qs.filter(payment_date__lte=dt_end.date())
+#         except ValueError:
+#             pass
+
+#     # Payments only relevant for installment sales; optionally filter by payment_type INSTALLMENT
+#     if payment_type == 'INSTALLMENT':
+#         pay_qs = pay_qs.filter(plan__sale__payment_type='INSTALLMENT')
+
+#     for p in pay_qs:
+#         entries.append({
+#             'date': datetime.combine(p.payment_date, datetime.min.time()).replace(tzinfo=timezone.get_current_timezone()),
+#             'type': 'PAYMENT',
+#             'ref': p.plan.sale.id,
+#             'customer': p.plan.sale.customer.name,
+#             'description': f"Installment Payment (Sale #{p.plan.sale.id})",
+#             'debit': Decimal('0'),
+#             'credit': p.amount_paid,
+#         })
+
+#     # Sort all entries by date ascending then type (SALE before PAYMENT if same timestamp for clarity)
+#     entries.sort(key=lambda e: (e['date'], 0 if e['type'] == 'SALE' else 1))
+
+#     running_balance = Decimal('0')
+#     for e in entries:
+#         running_balance += e['debit']
+#         running_balance -= e['credit']
+#         e['balance'] = running_balance
+
+#     # Simple pagination for potentially large ledgers
+#     page_obj = Paginator(entries, 25).get_page(request.GET.get('page'))
+
+#     # Customers list for filter dropdown
+#     from customers.models import Customer
+#     customers = Customer.objects.all().order_by('name')
+
+#     return render(request, 'sales/ledger.html', {
+#         'page_obj': page_obj,
+#         'customers': customers,
+#         'customer_id': customer_id,
+#         'start_date': start_date,
+#         'end_date': end_date,
+#         'payment_type': payment_type,
+#         'running_final': running_balance,
+#     })

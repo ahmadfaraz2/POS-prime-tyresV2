@@ -23,9 +23,19 @@ def _save_cart(request, cart):
 @login_required
 def product_list_view(request):
     products_qs = Product.objects.order_by('-created_at')
+    q = request.GET.get('q', '').strip()
+    if q:
+        # Basic icontains across name, brand, type, size
+        from django.db.models import Q
+        products_qs = products_qs.filter(
+            Q(name__icontains=q) |
+            Q(brand__icontains=q) |
+            Q(type__icontains=q) |
+            Q(size__icontains=q)
+        )
     paginator = Paginator(products_qs, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
-    return render(request, 'products/product_list.html', {'page_obj': page_obj})
+    return render(request, 'products/product_list.html', {'page_obj': page_obj, 'q': q})
 
 
 @login_required

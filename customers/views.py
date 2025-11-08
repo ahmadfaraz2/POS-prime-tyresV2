@@ -9,8 +9,16 @@ from .models import Customer
 @login_required
 def customer_list(request):
     qs = Customer.objects.order_by('-created_at')
+    q = request.GET.get('q', '').strip()
+    if q:
+        from django.db.models import Q
+        qs = qs.filter(
+            Q(name__icontains=q) |
+            Q(phone__icontains=q) |
+            Q(email__icontains=q)
+        )
     page_obj = Paginator(qs, 10).get_page(request.GET.get('page'))
-    return render(request, 'customers/customer_list.html', {'page_obj': page_obj})
+    return render(request, 'customers/customer_list.html', {'page_obj': page_obj, 'q': q})
 
 
 @login_required
