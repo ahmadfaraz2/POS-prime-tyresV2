@@ -3,13 +3,16 @@ from datetime import datetime, timedelta
 import csv
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, F
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
 from django.utils import timezone
 
 from .models import Sale, InstallmentPlan, InstallmentPayment
+from .models import MiscCharge
+from django.shortcuts import reverse
+from products.models import Product
 
 
 @login_required
@@ -211,101 +214,241 @@ def print_receipt_full(request, sale_id):
     })
 
 
-# @login_required
-# def ledger_view(request):
-#     """General ledger combining sales (debits) and installment payments (credits).
-#     Shows running balance. Optional filters: customer, start_date, end_date, payment_type.
-#     Balance interpretation: Each sale increases (debit) the receivable balance; each installment payment decreases it.
-#     """
-#     customer_id = request.GET.get('customer')
-#     start_date = request.GET.get('start')
-#     end_date = request.GET.get('end')
-#     payment_type = request.GET.get('payment_type')  # FULL or INSTALLMENT
+@login_required
+def misc_charge_list(request):
+    qs = MiscCharge.objects.order_by('-date', '-created_at')
+    # simple filter by category
+    category = request.GET.get('category')
+    if category:
+        qs = qs.filter(category=category)
+    page_obj = Paginator(qs, 15).get_page(request.GET.get('page'))
+    return render(request, 'sales/misc_charge_list.html', {'page_obj': page_obj, 'category': category})
 
-#     entries = []
 
-#     sales_qs = Sale.objects.select_related('customer').order_by('date')
-#     if customer_id:
-#         sales_qs = sales_qs.filter(customer_id=customer_id)
-#     if payment_type in ('FULL', 'INSTALLMENT'):
-#         sales_qs = sales_qs.filter(payment_type=payment_type)
-#     if start_date:
-#         try:
-#             dt_start = datetime.strptime(start_date, '%Y-%m-%d')
-#             sales_qs = sales_qs.filter(date__gte=dt_start)
-#         except ValueError:
-#             pass
-#     if end_date:
-#         try:
-#             dt_end = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
-#             sales_qs = sales_qs.filter(date__lt=dt_end)
-#         except ValueError:
-#             pass
+@login_required
+def misc_charge_create(request):
+    # allow preselecting category via GET param ?category=TRANSPORT or SALARY
+    pre_category = request.GET.get('category')
+    from django.utils import timezone as _tz
+    today = _tz.now().date()
 
-#     for s in sales_qs:
-#         entries.append({
-#             'date': s.date,
-#             'type': 'SALE',
-#             'ref': s.id,
-#             'customer': s.customer.name,
-#             'description': f"Sale #{s.id} ({s.get_payment_type_display()})",
-#             'debit': s.total_amount,
-#             'credit': Decimal('0'),
-#         })
+    if request.method == 'POST':
+        category = request.POST.get('category')
+        amount = request.POST.get('amount')
+        date = request.POST.get('date')
+        description = request.POST.get('description', '')
+        try:
+            amount_dec = Decimal(amount)
+        except Exception:
+            messages.error(request, 'Invalid amount provided.')
+            return redirect('sales:misc_charge_create')
+        mc = MiscCharge.objects.create(
+            category=category,
+            amount=amount_dec,
+            date=date,
+            description=description,
+            created_by=request.user,
+        )
+        messages.success(request, f'Misc charge recorded: {mc.get_category_display()} Rs {mc.amount}')
+        return redirect('sales:misc_charge_list')
+    return render(request, 'sales/misc_charge_form.html', {'category': pre_category, 'today': today})
 
-#     pay_qs = InstallmentPayment.objects.select_related('plan__sale__customer', 'plan').order_by('payment_date')
-#     if customer_id:
-#         pay_qs = pay_qs.filter(plan__sale__customer_id=customer_id)
-#     if start_date:
-#         try:
-#             dt_start = datetime.strptime(start_date, '%Y-%m-%d')
-#             pay_qs = pay_qs.filter(payment_date__gte=dt_start.date())
-#         except ValueError:
-#             pass
-#     if end_date:
-#         try:
-#             dt_end = datetime.strptime(end_date, '%Y-%m-%d')
-#             pay_qs = pay_qs.filter(payment_date__lte=dt_end.date())
-#         except ValueError:
-#             pass
 
-#     # Payments only relevant for installment sales; optionally filter by payment_type INSTALLMENT
-#     if payment_type == 'INSTALLMENT':
-#         pay_qs = pay_qs.filter(plan__sale__payment_type='INSTALLMENT')
+@login_required
+def ledger_view(request):
+    """General ledger combining sales (debits) and installment payments (credits).
+    Shows running balance. Optional filters: customer, start_date, end_date, payment_type.
+    Balance interpretation: Each sale increases (debit) the receivable balance; each installment payment decreases it.
+    """
+    customer_id = request.GET.get('customer')
+    start_date = request.GET.get('start')
+    end_date = request.GET.get('end')
+    payment_type = request.GET.get('payment_type')  # FULL or INSTALLMENT
 
-#     for p in pay_qs:
-#         entries.append({
-#             'date': datetime.combine(p.payment_date, datetime.min.time()).replace(tzinfo=timezone.get_current_timezone()),
-#             'type': 'PAYMENT',
-#             'ref': p.plan.sale.id,
-#             'customer': p.plan.sale.customer.name,
-#             'description': f"Installment Payment (Sale #{p.plan.sale.id})",
-#             'debit': Decimal('0'),
-#             'credit': p.amount_paid,
-#         })
+    entries = []
 
-#     # Sort all entries by date ascending then type (SALE before PAYMENT if same timestamp for clarity)
-#     entries.sort(key=lambda e: (e['date'], 0 if e['type'] == 'SALE' else 1))
+    sales_qs = Sale.objects.select_related('customer').order_by('date')
+    if customer_id:
+        sales_qs = sales_qs.filter(customer_id=customer_id)
+    if payment_type in ('FULL', 'INSTALLMENT'):
+        sales_qs = sales_qs.filter(payment_type=payment_type)
+    if start_date:
+        try:
+            dt_start = datetime.strptime(start_date, '%Y-%m-%d')
+            sales_qs = sales_qs.filter(date__gte=dt_start)
+        except ValueError:
+            pass
+    if end_date:
+        try:
+            dt_end = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+            sales_qs = sales_qs.filter(date__lt=dt_end)
+        except ValueError:
+            pass
 
-#     running_balance = Decimal('0')
-#     for e in entries:
-#         running_balance += e['debit']
-#         running_balance -= e['credit']
-#         e['balance'] = running_balance
+    for s in sales_qs:
+        entries.append({
+            'date': s.date,
+            'type': 'SALE',
+            'ref': s.id,
+            'customer': s.customer.name,
+            'description': f"Sale #{s.id} ({s.get_payment_type_display()})",
+            'debit': s.total_amount,
+            'credit': Decimal('0'),
+        })
 
-#     # Simple pagination for potentially large ledgers
-#     page_obj = Paginator(entries, 25).get_page(request.GET.get('page'))
+    pay_qs = InstallmentPayment.objects.select_related('plan__sale__customer', 'plan').order_by('payment_date')
+    if customer_id:
+        pay_qs = pay_qs.filter(plan__sale__customer_id=customer_id)
+    if start_date:
+        try:
+            dt_start = datetime.strptime(start_date, '%Y-%m-%d')
+            pay_qs = pay_qs.filter(payment_date__gte=dt_start.date())
+        except ValueError:
+            pass
+    if end_date:
+        try:
+            dt_end = datetime.strptime(end_date, '%Y-%m-%d')
+            pay_qs = pay_qs.filter(payment_date__lte=dt_end.date())
+        except ValueError:
+            pass
 
-#     # Customers list for filter dropdown
-#     from customers.models import Customer
-#     customers = Customer.objects.all().order_by('name')
+    # Payments only relevant for installment sales; optionally filter by payment_type INSTALLMENT
+    if payment_type == 'INSTALLMENT':
+        pay_qs = pay_qs.filter(plan__sale__payment_type='INSTALLMENT')
 
-#     return render(request, 'sales/ledger.html', {
-#         'page_obj': page_obj,
-#         'customers': customers,
-#         'customer_id': customer_id,
-#         'start_date': start_date,
-#         'end_date': end_date,
-#         'payment_type': payment_type,
-#         'running_final': running_balance,
-#     })
+    for p in pay_qs:
+        entries.append({
+            'date': datetime.combine(p.payment_date, datetime.min.time()).replace(tzinfo=timezone.get_current_timezone()),
+            'type': 'PAYMENT',
+            'ref': p.plan.sale.id,
+            'customer': p.plan.sale.customer.name,
+            'description': f"Installment Payment (Sale #{p.plan.sale.id})",
+            'debit': Decimal('0'),
+            'credit': p.amount_paid,
+        })
+
+    # Sort all entries by date ascending then type (SALE before PAYMENT if same timestamp for clarity)
+    entries.sort(key=lambda e: (e['date'], 0 if e['type'] == 'SALE' else 1))
+
+    running_balance = Decimal('0')
+    for e in entries:
+        running_balance += e['debit']
+        running_balance -= e['credit']
+        e['balance'] = running_balance
+
+    # Simple pagination for potentially large ledgers
+    page_obj = Paginator(entries, 25).get_page(request.GET.get('page'))
+
+    # Customers list for filter dropdown
+    from customers.models import Customer
+    customers = Customer.objects.all().order_by('name')
+
+    return render(request, 'sales/ledger.html', {
+        'page_obj': page_obj,
+        'customers': customers,
+        'customer_id': customer_id,
+        'start_date': start_date,
+        'end_date': end_date,
+        'payment_type': payment_type,
+        'running_final': running_balance,
+    })
+
+
+@login_required
+def balance_sheet_view(request):
+    # Delegate to helper and render
+    data = _compute_balance_sheet()
+    return render(request, 'sales/balance_sheet.html', data)
+
+
+def _compute_balance_sheet():
+    """Compute balance sheet values and return a dict for templates/exports."""
+    # Inventory value = sum(purchasing_price * stock_quantity)
+    inv_expr = ExpressionWrapper(F('purchasing_price') * F('stock_quantity'), output_field=DecimalField(max_digits=18, decimal_places=2))
+    inventory_value = Product.objects.aggregate(s=Sum(inv_expr))['s'] or Decimal('0')
+
+    # Cash: sum of FULL sales + all installment payments received
+    cash_full_sales = Sale.objects.filter(payment_type='FULL').aggregate(s=Sum('total_amount'))['s'] or Decimal('0')
+    cash_installments = InstallmentPayment.objects.aggregate(s=Sum('amount_paid'))['s'] or Decimal('0')
+    cash_on_hand = (cash_full_sales or Decimal('0')) + (cash_installments or Decimal('0'))
+
+    # Accounts receivable: outstanding from installment plans
+    plans = InstallmentPlan.objects.all().annotate(paid=Sum('payments__amount_paid'))
+    accounts_receivable = Decimal('0')
+    for p in plans:
+        total_due = p.sale.total_amount
+        paid = p.paid or Decimal('0')
+        diff = total_due - paid
+        if diff > 0:
+            accounts_receivable += diff
+
+    total_assets = cash_on_hand + accounts_receivable + inventory_value
+
+    # Liabilities - not tracked in this system; show 0 for now
+    total_liabilities = Decimal('0')
+
+    # Equity (basic): Assets - Liabilities
+    equity = total_assets - total_liabilities
+
+    return {
+        'inventory_value': inventory_value,
+        'cash_on_hand': cash_on_hand,
+        'accounts_receivable': accounts_receivable,
+        'total_assets': total_assets,
+        'total_liabilities': total_liabilities,
+        'equity': equity,
+    }
+
+
+@login_required
+def balance_sheet_export(request):
+    """Export balance sheet in CSV or Excel (HTML) format. Use ?format=csv or ?format=xls or ?format=print (redirect to printable view)."""
+    fmt = request.GET.get('format', 'csv').lower()
+    data = _compute_balance_sheet()
+
+    now = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    if fmt == 'print' or fmt == 'pdf':
+        # For PDF we provide the printable HTML view — users can print/save as PDF from browser.
+        return redirect(reverse('sales:balance_sheet_print'))
+
+    if fmt == 'xls':
+        # Return a simple HTML table that Excel can open
+        filename = f'balance_sheet_{now}.xls'
+        response = HttpResponse(content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        # Build a minimal HTML table
+        html = ['<table border="1">']
+        html.append('<tr><th>Line</th><th>Amount (Rs)</th></tr>')
+        html.append(f'<tr><td>Cash on Hand</td><td>{data["cash_on_hand"]}</td></tr>')
+        html.append(f'<tr><td>Accounts Receivable</td><td>{data["accounts_receivable"]}</td></tr>')
+        html.append(f'<tr><td>Inventory Value</td><td>{data["inventory_value"]}</td></tr>')
+        html.append(f'<tr><td></td><td></td></tr>')
+        html.append(f'<tr><td><strong>Total Assets</strong></td><td><strong>{data["total_assets"]}</strong></td></tr>')
+        html.append(f'<tr><td>Total Liabilities</td><td>{data["total_liabilities"]}</td></tr>')
+        html.append(f'<tr><td><strong>Equity</strong></td><td><strong>{data["equity"]}</strong></td></tr>')
+        html.append('</table>')
+        response.write(''.join(html))
+        return response
+
+    # Default: CSV
+    filename = f'balance_sheet_{now}.csv'
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    writer = csv.writer(response)
+    writer.writerow(['Line', 'Amount (Rs)'])
+    writer.writerow(['Cash on Hand', str(data['cash_on_hand'])])
+    writer.writerow(['Accounts Receivable', str(data['accounts_receivable'])])
+    writer.writerow(['Inventory Value', str(data['inventory_value'])])
+    writer.writerow([])
+    writer.writerow(['Total Assets', str(data['total_assets'])])
+    writer.writerow(['Total Liabilities', str(data['total_liabilities'])])
+    writer.writerow(['Equity', str(data['equity'])])
+    return response
+
+
+@login_required
+def balance_sheet_print(request):
+    """Printable balance sheet HTML page - includes a small print button to save as PDF from browser."""
+    data = _compute_balance_sheet()
+    return render(request, 'sales/balance_sheet_print.html', data)

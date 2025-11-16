@@ -1,13 +1,14 @@
 from decimal import Decimal
 from datetime import timedelta
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F, ExpressionWrapper, DecimalField
 from django.shortcuts import render
 from django.utils import timezone
 
 from products.models import Product
 from customers.models import Customer
-from sales.models import Sale, InstallmentPlan
+from sales.models import Sale, InstallmentPlan, SaleItem, MiscCharge
+from sales.models import Employee
 
 
 @login_required
@@ -52,6 +53,34 @@ def dashboard_view(request):
     # Recent sales (last 5)
     recent_sales = Sale.objects.select_related('customer').order_by('-date')[:5]
 
+    # Profit calculations
+    profit_expr = ExpressionWrapper((F('unit_price') - F('product__purchasing_price')) * F('quantity'), output_field=DecimalField(max_digits=14, decimal_places=2))
+
+    sales_today_profit = SaleItem.objects.filter(sale__date__gte=today_start).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
+    sales_this_week_profit = SaleItem.objects.filter(sale__date__gte=week_start).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
+    sales_this_month_profit = SaleItem.objects.filter(sale__date__gte=month_start).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
+
+    total_gross_profit = SaleItem.objects.filter(sale__is_completed=True).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
+
+    # Misc charges sums (overall and for current month)
+    total_misc_charges = MiscCharge.objects.aggregate(s=Sum('amount'))['s'] or Decimal('0')
+    month_misc_charges = MiscCharge.objects.filter(date__gte=month_start.date()).aggregate(s=Sum('amount'))['s'] or Decimal('0')
+
+    # Breakdown by category
+    transport_total = MiscCharge.objects.filter(category='TRANSPORT').aggregate(s=Sum('amount'))['s'] or Decimal('0')
+    salary_total = MiscCharge.objects.filter(category='SALARY').aggregate(s=Sum('amount'))['s'] or Decimal('0')
+    month_transport = MiscCharge.objects.filter(category='TRANSPORT', date__gte=month_start.date()).aggregate(s=Sum('amount'))['s'] or Decimal('0')
+    month_salary = MiscCharge.objects.filter(category='SALARY', date__gte=month_start.date()).aggregate(s=Sum('amount'))['s'] or Decimal('0')
+
+    # Net profit = Gross profit - misc charges
+    total_net_profit = total_gross_profit - total_misc_charges
+
+    # Employee payroll
+    monthly_payroll = Employee.objects.filter(is_active=True).aggregate(s=Sum('monthly_salary'))['s'] or Decimal('0')
+
+    # Net profit for current month subtracting payroll and month misc charges (transport/salary)
+    net_profit_this_month = sales_this_month_profit - monthly_payroll - month_misc_charges - month_transport
+
     ctx = {
         'sales_today': sales_today,
         'sales_today_revenue': sales_today_revenue,
@@ -66,5 +95,18 @@ def dashboard_view(request):
         'outstanding_installments': outstanding,
         'pending_installments': pending_installments,
         'recent_sales': recent_sales,
+        # Profit context for template
+        'sales_today_profit': sales_today_profit,
+        'sales_this_week_profit': sales_this_week_profit,
+        'sales_this_month_profit': sales_this_month_profit,
+        'total_gross_profit': total_gross_profit,
+    'total_misc_charges': total_misc_charges,
+    'total_net_profit': total_net_profit,
+    'transport_total': transport_total,
+    'salary_total': salary_total,
+    'month_transport': month_transport,
+    'month_salary': month_salary,
+        'monthly_payroll': monthly_payroll,
+        'net_profit_this_month': net_profit_this_month,
     }
     return render(request, 'dashboard/dashboard.html', ctx)

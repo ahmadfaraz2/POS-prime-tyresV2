@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 
 class Product(models.Model):
@@ -15,3 +16,16 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def selling_price(self) -> Decimal:
+        """Alias for the current selling price (keeps existing DB field name `price`)."""
+        return self.price
+
+    @property
+    def profit(self) -> Decimal:
+        """Profit per unit (selling - purchasing). Returns Decimal."""
+        try:
+            return (self.price - self.purchasing_price)
+        except Exception:
+            return Decimal('0')

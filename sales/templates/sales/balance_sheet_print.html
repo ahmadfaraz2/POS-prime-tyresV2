@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+{% block title %}Balance Sheet - Print{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold">Balance Sheet</h1>
+  <p class="text-sm text-gray-600">Printable view — use your browser's Print / Save as PDF</p>
+</div>
+
+<div class="bg-white p-6 rounded shadow max-w-3xl mx-auto">
+  <table class="w-full text-sm">
+    <tr><th class="text-left">Line</th><th class="text-right">Amount (Rs)</th></tr>
+    <tr><td>Cash on Hand</td><td class="text-right">Rs {{ cash_on_hand|currency }}</td></tr>
+    <tr><td>Accounts Receivable</td><td class="text-right">Rs {{ accounts_receivable|currency }}</td></tr>
+    <tr><td>Inventory (cost)</td><td class="text-right">Rs {{ inventory_value|currency }}</td></tr>
+    <tr><td colspan="2">&nbsp;</td></tr>
+    <tr><td><strong>Total Assets</strong></td><td class="text-right"><strong>Rs {{ total_assets|currency }}</strong></td></tr>
+    <tr><td>Total Liabilities</td><td class="text-right">Rs {{ total_liabilities|currency }}</td></tr>
+    <tr><td><strong>Equity</strong></td><td class="text-right"><strong>Rs {{ equity|currency }}</strong></td></tr>
+  </table>
+
+  <div class="mt-6 text-center">
+    <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Print / Save as PDF</button>
+  </div>
+</div>
+
+{% endblock %}

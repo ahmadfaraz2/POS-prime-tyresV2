@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+{% load form_tags %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Receipt #{{ purchase.id }} - Print</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    @page { size: A4; margin: 0; }
+    body { font-family: 'Arial', sans-serif; background: white; margin:0; padding:0 }
+    .page { width:210mm; min-height:297mm; padding:15mm; background:white; position:relative; page-break-after: always; border-bottom:1px dashed #ccc }
+    .page:last-child { page-break-after: auto }
+    .watermark { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-45deg); font-size:80px; font-weight:bold; opacity:0.12; z-index:1; pointer-events:none; text-transform:uppercase; letter-spacing:5px }
+    .watermark.received { color: #059669 }
+    .watermark.pending { color: #dc2626 }
+    .content { position:relative; z-index:2 }
+    .header { text-align:center; margin-bottom:20px; border-bottom:3px solid #000; padding-bottom:12px }
+    .header h1 { font-size:26px; margin-bottom:4px }
+    .company-info { font-size:12px; color:#6b7280 }
+    .copy-label { position:absolute; top:15mm; right:15mm; background:#3b82f6; color:#fff; padding:6px 14px; border-radius:5px; font-size:11px; font-weight:bold }
+    .receipt-info { display:flex; justify-content:space-between; margin-bottom:18px; font-size:13px }
+    .receipt-info .section { flex:1 }
+    .label { font-weight:bold; color:#374151; margin-bottom:6px }
+    .value { color:#6b7280 }
+    .items-table { width:100%; border-collapse:collapse; margin:12px 0; font-size:13px }
+    .items-table thead { background:#f3f4f6; border-top:2px solid #000; border-bottom:2px solid #000 }
+    .items-table th { padding:10px; text-align:left; font-weight:bold }
+    .items-table td { padding:8px 10px; border-bottom:1px solid #e5e7eb }
+    .text-right { text-align:right }
+    .totals { margin-top:14px; text-align:right }
+    .totals .row { display:flex; justify-content:flex-end; margin-bottom:6px; font-size:14px }
+    .totals .label { margin-right:30px; color:#6b7280; min-width:150px; text-align:right }
+    .totals .value { min-width:120px; text-align:right; font-weight:bold }
+    .totals .total-row { border-top:2px solid #000; padding-top:8px; margin-top:8px; font-size:16px }
+    .signatures { margin-top:40px; display:flex; justify-content:space-between }
+    .signature-box { text-align:center; flex:1 }
+    .signature-line { border-top:2px solid #000; margin-top:30px; padding-top:6px; font-size:12px; color:#6b7280 }
+    .footer { position:absolute; bottom:15mm; left:15mm; right:15mm; text-align:center; font-size:11px; color:#9ca3af; border-top:1px solid #e5e7eb; padding-top:10px }
+    @media print { .page { border-bottom:none } }
+  </style>
+</head>
+<body>
+  {% for label in copy_labels %}
+  <div class="page">
+    <div class="watermark {% if purchase.is_received %}received{% else %}pending{% endif %}">
+      {% if purchase.is_received %}RECEIVED{% else %}PENDING{% endif %}
+    </div>
+    <div class="content">
+      <div class="copy-label">{{ label }}</div>
+      <div class="header">
+        <h1>PURCHASE RECEIPT</h1>
+        <div class="company-info">Prime Tyres | Address Line 1, City | Phone: (123) 456-7890 | Email: info@company.com</div>
+      </div>
+
+      <div class="receipt-info">
+        <div class="section">
+          <div class="label">Receipt No:</div>
+          <div class="value">#{{ purchase.id }}</div>
+          <div class="label" style="margin-top:8px">Date:</div>
+          <div class="value">{{ purchase.date|date:"F d, Y" }} {{ purchase.date|date:"h:i A" }}</div>
+        </div>
+        <div class="section">
+          <div class="label">Vendor:</div>
+          <div class="value">{{ purchase.vendor.name }}</div>
+          <div class="label" style="margin-top:8px">Contact:</div>
+          <div class="value">{{ purchase.vendor.phone }}{% if purchase.vendor.email %} · {{ purchase.vendor.email }}{% endif %}</div>
+        </div>
+        <div class="section">
+          <div class="label">Processed By:</div>
+          <div class="value">{{ purchase.created_by.username }}</div>
+          <div class="label" style="margin-top:8px">Received:</div>
+          <div class="value">{% if purchase.is_received %}Yes{% else %}No{% endif %}</div>
+        </div>
+      </div>
+
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th style="width:10%">#</th>
+            <th style="width:50%">Product</th>
+            <th style="width:13%" class="text-right">Quantity</th>
+            <th style="width:13%" class="text-right">Unit Cost</th>
+            <th style="width:14%" class="text-right">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in purchase.items.all %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ item.product.name }}</td>
+            <td class="text-right">{{ item.quantity }}</td>
+            <td class="text-right">Rs {{ item.unit_cost|currency }}</td>
+            <td class="text-right">Rs {{ item.subtotal|currency }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <div class="row">
+          <div class="label">Items Subtotal:</div>
+          <div class="value">Rs {{ items_total|currency }}</div>
+        </div>
+        <div class="row">
+          <div class="label">Transportation:</div>
+          <div class="value">Rs {{ purchase.transport_cost|currency }}</div>
+        </div>
+        <div class="row total-row">
+          <div class="label">Total Amount:</div>
+          <div class="value">Rs {{ purchase.total_amount|currency }}</div>
+        </div>
+      </div>
+
+      <div class="signatures">
+        <div class="signature-box">
+          <div class="signature-line">Received By</div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-line">Authorized Signature</div>
+        </div>
+      </div>
+
+      <div class="footer">Thank you. This is a computer generated receipt.</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <script>window.onload = function(){ window.print(); }</script>
+</body>
+</html>

@@ -78,6 +78,57 @@
   </div>
 </div>
 
+<!-- Profit Overview -->
+<div class="mb-6">
+  <h2 class="text-xl font-bold text-gray-800 mb-3">💰 Profit Overview</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+      <p class="text-sm text-gray-600">Gross Profit (Today)</p>
+      <p class="text-2xl font-bold mt-2 text-gray-900">Rs {{ sales_today_profit|currency }}</p>
+      <p class="text-xs text-gray-500 mt-1">Before misc charges</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+      <p class="text-sm text-gray-600">Gross Profit (This Week)</p>
+      <p class="text-2xl font-bold mt-2 text-gray-900">Rs {{ sales_this_week_profit|currency }}</p>
+      <p class="text-xs text-gray-500 mt-1">Before misc charges</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+      <p class="text-sm text-gray-600">Gross Profit (This Month)</p>
+      <p class="text-2xl font-bold mt-2 text-gray-900">Rs {{ sales_this_month_profit|currency }}</p>
+      <p class="text-xs text-gray-500 mt-1">Before misc charges</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+      <p class="text-sm text-gray-600">Net Profit (All Time)</p>
+      <p class="text-2xl font-bold mt-2 text-gray-900">Rs {{ total_net_profit|currency }}</p>
+      <p class="text-xs text-gray-500 mt-1">Gross: Rs {{ total_gross_profit|currency }} • Misc: Rs {{ total_misc_charges|currency }}</p>
+      <div class="mt-2 text-xs text-gray-600">
+        <div>Transport total: Rs {{ transport_total|currency }}</div>
+        <div>Salaries total: Rs {{ salary_total|currency }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly payroll and net month -->
+<div class="mb-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+      <p class="text-sm text-gray-600">Monthly Payroll (Employees)</p>
+      <p class="text-2xl font-bold mt-2 text-gray-900">Rs {{ monthly_payroll|currency }}</p>
+      <p class="text-xs text-gray-500 mt-1">Sum of active employees' monthly_salary</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+      <p class="text-sm text-gray-600">Net Profit (This Month)</p>
+      <p class="text-2xl font-bold mt-2 text-gray-900">Rs {{ net_profit_this_month|currency }}</p>
+      <p class="text-xs text-gray-500 mt-1">Gross month profit minus payroll and month misc charges</p>
+    </div>
+  </div>
+</div>
+
 <!-- Secondary Statistics -->
 <div class="mb-8">
   <h2 class="text-2xl font-bold text-gray-800 mb-4">📈 Business Metrics</h2>
@@ -220,6 +271,36 @@
         <div class="ml-4">
           <p class="font-semibold text-gray-800">View Reports</p>
           <p class="text-sm text-gray-500">Sales history</p>
+        </div>
+      </div>
+    </a>
+    
+    <!-- Add Transport Charge -->
+    <a href="{% url 'sales:misc_charge_create' %}?category=TRANSPORT" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 border-2 border-transparent hover:border-red-500">
+      <div class="flex items-center">
+        <div class="bg-red-100 p-3 rounded-lg">
+          <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M5 7v10a2 2 0 002 2h10a2 2 0 002-2V7" />
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="font-semibold text-gray-800">Add Transport Charge</p>
+          <p class="text-sm text-gray-500">Quick add transport expense</p>
+        </div>
+      </div>
+    </a>
+
+    <!-- Add Salary Charge -->
+    <a href="{% url 'sales:misc_charge_create' %}?category=SALARY" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 border-2 border-transparent hover:border-indigo-500">
+      <div class="flex items-center">
+        <div class="bg-indigo-100 p-3 rounded-lg">
+          <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c2.21 0 4-1.79 4-4S14.21 3 12 3 8 4.79 8 7s1.79 4 4 4zM6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="font-semibold text-gray-800">Add Salary</p>
+          <p class="text-sm text-gray-500">Record employee salary</p>
         </div>
       </div>
     </a>

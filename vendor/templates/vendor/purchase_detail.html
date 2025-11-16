@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+{% block title %}Purchase Detail{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold">Purchase #{{ purchase.id }}</h1>
+  <p class="text-sm text-gray-600">Vendor: {{ purchase.vendor.name }}</p>
+</div>
+
+<div class="bg-white rounded shadow p-4 max-w-3xl">
+  <div class="overflow-x-auto lg:overflow-x-hidden">
+    <table class="w-full text-sm table-auto">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="text-left w-1/2 px-2 py-2">Product</th>
+          <th class="text-center w-1/12 px-2 py-2">Qty</th>
+          <th class="text-right w-1/6 px-2 py-2">Unit Cost</th>
+          <th class="text-right w-1/6 px-2 py-2">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in purchase.items.all %}
+          <tr class="border-t">
+            <td class="py-2 px-2">{{ it.product.name }}</td>
+            <td class="py-2 px-2 text-center">{{ it.quantity }}</td>
+            <td class="py-2 px-2 text-right">Rs {{ it.unit_cost|currency }}</td>
+            <td class="py-2 px-2 text-right">Rs {{ it.subtotal|currency }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="border-t">
+          <td colspan="3" class="py-2 px-2 text-right">Items Subtotal</td>
+          <td class="py-2 px-2 text-right">Rs {{ items_total|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="3" class="py-2 px-2 text-right">Transportation</td>
+          <td class="py-2 px-2 text-right">Rs {{ purchase.transport_cost|currency }}</td>
+        </tr>
+        <tr class="border-t font-semibold">
+          <td colspan="3" class="py-3 px-2 text-right">Total</td>
+          <td class="py-3 px-2 text-right">Rs {{ purchase.total_amount|currency }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+ 
+<div class="mt-4 flex items-center space-x-3">
+  <a href="{% url 'vendor:purchase_print' purchase.id %}" target="_blank" class="inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Print Receipt</a>
+
+  <a href="{% url 'returns:vendor_return_create' %}?from_purchase={{ purchase.id }}" class="inline-block bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Create Vendor Return</a>
+
+  {% if purchase.is_received %}
+    <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded">Received</span>
+  {% else %}
+    <form method="post" action="{% url 'vendor:purchase_receive' purchase.id %}">
+      {% csrf_token %}
+      <button type="submit" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Mark Received</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

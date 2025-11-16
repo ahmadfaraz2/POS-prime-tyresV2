@@ -41,3 +41,38 @@ class InstallmentPayment(models.Model):
     payment_date = models.DateField(auto_now_add=True)
     amount_paid = models.DecimalField(max_digits=12, decimal_places=2)
     is_paid = models.BooleanField(default=True)
+
+
+class MiscCharge(models.Model):
+    CATEGORY_CHOICES = [
+        ('TRANSPORT', 'Transport'),
+        ('SALARY', 'Salary'),
+        ('SUPPLIES', 'Supplies'),
+        ('OTHER', 'Other'),
+    ]
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    date = models.DateField()
+    description = models.TextField(blank=True)
+    created_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='misc_charges')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"{self.get_category_display()} - Rs {self.amount} on {self.date}"
+
+
+class Employee(models.Model):
+    name = models.CharField(max_length=255)
+    monthly_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_active', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({'active' if self.is_active else 'inactive'})"

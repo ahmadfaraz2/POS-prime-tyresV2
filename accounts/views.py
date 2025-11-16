@@ -11,8 +11,11 @@ def register_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Registration successful. You can now log in.')
+            # Create the user as inactive so an admin must activate the account
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
+            messages.success(request, 'Registration received. Your account will be activated by an administrator.')
             return redirect('accounts:login')
         else:
             messages.error(request, 'Please correct the errors below.')

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+{% block title %}Purchase #{{ purchase.id }}{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold">Purchase #{{ purchase.id }}</h1>
+  <p class="text-sm text-gray-600">Vendor: {{ purchase.vendor.name }} | Date: {{ purchase.date|date:'Y-m-d H:i' }}</p>
+</div>
+
+<div class="bg-white p-6 rounded shadow max-w-3xl mx-auto">
+  <table class="w-full text-sm">
+    <thead><tr><th>Product</th><th class="text-right">Qty</th><th class="text-right">Unit Cost</th><th class="text-right">Subtotal</th></tr></thead>
+    <tbody>
+      {% for it in purchase.items.all %}
+        <tr>
+          <td>{{ it.product.name }}</td>
+          <td class="text-right">{{ it.quantity }}</td>
+          <td class="text-right">Rs {{ it.unit_cost|currency }}</td>
+          <td class="text-right">Rs {{ it.subtotal|currency }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="mt-6 text-right font-semibold">Total: Rs {{ purchase.total_amount|currency }}</div>
+
+  <div class="mt-6 text-center">
+    <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Print</button>
+  </div>
+</div>
+
+{% endblock %}

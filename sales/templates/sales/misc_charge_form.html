@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+{% block title %}Add Misc Charge{% endblock %}
+{% block content %}
+<div class="max-w-2xl">
+  <h1 class="text-2xl font-bold mb-4">Record Miscellaneous Charge</h1>
+  <form method="post" class="space-y-4 bg-white p-6 rounded shadow">
+    {% csrf_token %}
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Category</label>
+      <select name="category" class="w-full border rounded px-3 py-2">
+        <option value="TRANSPORT" {% if category == 'TRANSPORT' %}selected{% endif %}>Transport</option>
+        <option value="SALARY" {% if category == 'SALARY' %}selected{% endif %}>Salary</option>
+        <option value="SUPPLIES" {% if category == 'SUPPLIES' %}selected{% endif %}>Supplies</option>
+        <option value="OTHER" {% if category == 'OTHER' %}selected{% endif %}>Other</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Amount (Rs)</label>
+      <input type="text" name="amount" class="w-full border rounded px-3 py-2" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Date</label>
+      <input type="date" name="date" class="w-full border rounded px-3 py-2" value="{{ today }}" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Description (optional)</label>
+      <textarea name="description" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+    </div>
+    <div class="flex gap-2">
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+      <a href="{% url 'sales:misc_charge_list' %}" class="px-4 py-2 rounded border">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

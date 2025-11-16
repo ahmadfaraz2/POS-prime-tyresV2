@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+{% block title %}Customer Return{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold">Customer Return</h1>
+</div>
+
+<div class="bg-white rounded shadow p-4 max-w-2xl">
+  <form method="post">
+    {% csrf_token %}
+    {% if form_errors %}
+      <div class="mb-3">
+        {% for e in form_errors %}
+          <div class="text-sm text-red-700 bg-red-100 px-3 py-2 rounded mb-1">{{ e }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div>
+        <label class="block text-sm">Customer</label>
+        <select name="customer" class="w-full border rounded px-3 py-2">
+          {% for c in customers %}
+            <option value="{{ c.id }}" {% if prefill_customer and c.id == prefill_customer %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <h3 class="font-semibold mb-2">Items</h3>
+      <div id="itemsContainer" class="space-y-2">
+        {% if prefill_items %}
+          {% for it in prefill_items %}
+          <div class="item-row grid grid-cols-6 gap-2 items-end">
+            <div class="col-span-2">
+              <label class="block text-sm">Product</label>
+              <select name="product" class="w-full border rounded px-3 py-2">
+                {% for p in products %}
+                  <option value="{{ p.id }}" {% if p.id == it.product_id %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm">Qty</label>
+              <input type="number" name="quantity" min="1" value="{{ it.quantity }}" class="w-full border rounded px-3 py-2 qty-input" />
+            </div>
+            <div>
+              <label class="block text-sm">Unit Cost</label>
+              <input name="unit_cost" class="w-full border rounded px-3 py-2 unit-input" value="{{ it.unit_cost }}" />
+            </div>
+            <div>
+              <label class="block text-sm">Subtotal</label>
+              <div class="row-subtotal text-right">Rs {{ it.subtotal|currency }}</div>
+              <input type="hidden" name="subtotal" value="{{ it.subtotal|floatformat:2 }}" class="subtotal-input" />
+            </div>
+            <div class="col-span-1">
+              <button type="button" class="remove-row bg-red-500 text-white px-3 py-1 rounded">Remove</button>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="item-row grid grid-cols-6 gap-2 items-end">
+            <div class="col-span-2">
+              <label class="block text-sm">Product</label>
+              <select name="product" class="w-full border rounded px-3 py-2">
+                {% for p in products %}
+                  <option value="{{ p.id }}">{{ p.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm">Qty</label>
+              <input type="number" name="quantity" min="1" value="1" class="w-full border rounded px-3 py-2 qty-input" />
+            </div>
+            <div>
+              <label class="block text-sm">Unit Cost</label>
+              <input name="unit_cost" class="w-full border rounded px-3 py-2 unit-input" />
+            </div>
+            <div>
+              <label class="block text-sm">Subtotal</label>
+              <div class="row-subtotal text-right">Rs 0.00</div>
+              <input type="hidden" name="subtotal" value="0.00" class="subtotal-input" />
+            </div>
+            <div class="col-span-1">
+              <button type="button" class="remove-row bg-red-500 text-white px-3 py-1 rounded">Remove</button>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="mt-3">
+        <button id="addRow" type="button" class="bg-gray-200 px-3 py-1 rounded">Add Item</button>
+      </div>
+    </div>
+
+    <div class="mt-4 flex items-center justify-between">
+      <div class="text-lg">Items total: <strong id="itemsTotal">Rs 0.00</strong></div>
+      <div>
+        <button class="bg-green-600 text-white px-4 py-2 rounded">Create Return</button>
+      </div>
+    </div>
+  </form>
+
+  <script>
+    const addRowBtn = document.getElementById('addRow');
+    const itemsContainer = document.getElementById('itemsContainer');
+
+    function formatCurrency(num){
+      return 'Rs ' + Number(num).toFixed(2);
+    }
+
+    function updateRowSubtotal(row){
+      const qtyEl = row.querySelector('.qty-input');
+      const unitEl = row.querySelector('.unit-input');
+      const subtotalEl = row.querySelector('.row-subtotal');
+      const hidden = row.querySelector('.subtotal-input');
+      const qty = parseFloat(qtyEl.value) || 0;
+      const unit = parseFloat(unitEl.value) || 0;
+      const subtotal = qty * unit;
+      if(subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
+      if(hidden) hidden.value = subtotal.toFixed(2);
+      updateTotal();
+    }
+
+    function attachListeners(row){
+      const qty = row.querySelector('.qty-input');
+      const unit = row.querySelector('.unit-input');
+      qty.addEventListener('input', () => updateRowSubtotal(row));
+      unit.addEventListener('input', () => updateRowSubtotal(row));
+      attachRemove(row);
+      // initial compute
+      updateRowSubtotal(row);
+    }
+
+    function attachRemove(el) {
+      const btn = el.querySelector('.remove-row');
+      btn.addEventListener('click', () => {
+        if (itemsContainer.querySelectorAll('.item-row').length > 1) {
+          el.remove();
+          updateTotal();
+        }
+      });
+    }
+
+    function updateTotal(){
+      let total = 0;
+      itemsContainer.querySelectorAll('.item-row').forEach(row => {
+        const hidden = row.querySelector('.subtotal-input');
+        total += parseFloat(hidden.value || '0') || 0;
+      });
+      document.getElementById('itemsTotal').textContent = formatCurrency(total);
+    }
+
+    addRowBtn.addEventListener('click', () => {
+      const first = itemsContainer.querySelector('.item-row');
+      const clone = first.cloneNode(true);
+      // reset inputs
+      clone.querySelectorAll('input').forEach(i => { if (i.type === 'number') i.value = 1; else i.value = ''; });
+      clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+      // reset visible subtotal
+      const sub = clone.querySelector('.row-subtotal'); if(sub) sub.textContent = 'Rs 0.00';
+      const hidden = clone.querySelector('.subtotal-input'); if(hidden) hidden.value = '0.00';
+      itemsContainer.appendChild(clone);
+      attachListeners(clone);
+    });
+
+    // attach to initial rows
+    document.querySelectorAll('.item-row').forEach(r => attachListeners(r));
+  </script>
+</div>
+
+{% endblock %}

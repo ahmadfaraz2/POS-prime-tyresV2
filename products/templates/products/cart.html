@@ -26,20 +26,30 @@
             </td>
             <td class="p-3">Rs {{ item.subtotal|currency }}</td>
             <td class="p-3 text-right">
-              <a href="{% url 'products:remove_from_cart' item.product_id %}" class="text-red-600">Remove</a>
+              <a href="{% url 'products:remove_from_cart' item.product_id %}" class="inline-block bg-red-100 text-red-700 hover:bg-red-600 hover:text-white px-3 py-1 rounded">Remove</a>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="5" class="p-4 text-center">Your cart is empty.</td></tr>
+          <tr>
+            <td colspan="5" class="p-4 text-center">
+              <div class="space-y-3">
+                <div>Your cart is empty.</div>
+                <div>
+                  <a href="{% url 'products:product_list' %}" class="inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Browse Products</a>
+                </div>
+              </div>
+            </td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   <div class="mt-4 flex items-center justify-between">
     <div class="text-lg">Total: <strong>Rs {{ total|currency }}</strong></div>
-    <div class="flex gap-2">
-      <button class="px-4 py-2 border rounded">Update Cart</button>
-      <a href="{% url 'products:checkout' %}" class="bg-blue-600 text-white px-4 py-2 rounded">Checkout</a>
+    <div class="flex gap-2 items-center">
+      <a href="{% url 'products:product_list' %}" class="px-4 py-2 border rounded bg-indigo-600 text-white hover:bg-indigo-700">Add more items</a>
+      <button class="px-4 py-2 border rounded bg-yellow-400 hover:bg-yellow-500 text-black">Update Cart</button>
+      <a href="{% url 'products:checkout' %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Checkout</a>
     </div>
   </div>
 </form>

@@ -13,15 +13,60 @@
   <div class="flex min-h-screen">
     <!-- Sidebar Desktop -->
     {% if request.user.is_authenticated %}
-    <aside class="w-64 bg-white border-r hidden md:block">
+  <aside class="w-56 flex-none bg-white border-r hidden md:block md:sticky md:top-0 md:h-screen md:overflow-y-auto md:z-20">
       <div class="p-4 font-semibold text-xl">ShopProject</div>
       <nav class="p-2 space-y-1">
-        <a href="{% url 'dashboard:dashboard_view' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Dashboard</a>
-        <a href="{% url 'products:product_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Products</a>
-        <a href="{% url 'customers:customer_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Customers</a>
-        <a href="{% url 'sales:sale_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Sales</a>
-        {% comment %} <a href="{% url 'sales:ledger' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Ledger</a> {% endcomment %}
-        <a href="{% url 'sales:installment_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Installments</a>
+        <div class="px-3 py-1 text-xs text-gray-500 uppercase">Sales</div>
+        <a href="{% url 'dashboard:dashboard_view' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='dashboard' %}
+          <span>Dashboard</span>
+        </a>
+        <a href="{% url 'sales:sale_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='sales' %}
+          <span>Sales</span>
+        </a>
+        <a href="{% url 'customers:customer_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='customers' %}
+          <span>Customers</span>
+        </a>
+        <a href="{% url 'returns:customer_return_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='customer_returns' %}
+          <span>Customer Returns</span>
+        </a>
+
+        <div class="border-t my-2"></div>
+        <div class="px-3 py-1 text-xs text-gray-500 uppercase">Inventory</div>
+        <a href="{% url 'products:product_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='products' %}
+          <span>Products</span>
+        </a>
+        <a href="{% url 'vendor:purchase_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='purchases' %}
+          <span>Purchases</span>
+        </a>
+        <a href="{% url 'vendor:vendor_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='vendors' %}
+          <span>Vendors</span>
+        </a>
+        <a href="{% url 'returns:vendor_return_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='vendor_returns' %}
+          <span>Vendor Returns</span>
+        </a>
+
+        <div class="border-t my-2"></div>
+        <div class="px-3 py-1 text-xs text-gray-500 uppercase">Finance</div>
+        <a href="{% url 'sales:installment_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='installments' %}
+          <span>Installments</span>
+        </a>
+        <a href="{% url 'sales:ledger' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='ledger' %}
+          <span>Ledger</span>
+        </a>
+        <a href="{% url 'sales:misc_charge_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='misc' %}
+          <span>Misc Charges</span>
+        </a>
       </nav>
     </aside>
 
@@ -31,7 +76,7 @@
       <div id="sidebarBackdrop" class="absolute inset-0 bg-black bg-opacity-50"></div>
       
       <!-- Sidebar content -->
-      <aside class="absolute top-0 left-0 w-64 h-full bg-white border-r shadow-xl transform transition-transform duration-300 -translate-x-full" id="sidebarContent">
+  <aside class="absolute top-0 left-0 w-56 h-full bg-white border-r shadow-xl transform transition-transform duration-300 -translate-x-full" id="sidebarContent">
         <div class="p-4 flex items-center justify-between border-b">
           <span class="font-semibold text-xl">ShopProject</span>
           <button id="closeSidebar" class="p-1 rounded hover:bg-gray-100">
@@ -41,12 +86,57 @@
           </button>
         </div>
         <nav class="p-2 space-y-1">
-          <a href="{% url 'dashboard:dashboard_view' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Dashboard</a>
-          <a href="{% url 'products:product_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Products</a>
-          <a href="{% url 'customers:customer_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Customers</a>
-          <a href="{% url 'sales:sale_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Sales</a>
-          {% comment %} <a href="{% url 'sales:ledger' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Ledger</a> {% endcomment %}
-          <a href="{% url 'sales:installment_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Installments</a>
+          <div class="px-3 py-1 text-xs text-gray-500 uppercase">Sales</div>
+          <a href="{% url 'dashboard:dashboard_view' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='dashboard' %}
+            <span>Dashboard</span>
+          </a>
+          <a href="{% url 'sales:sale_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='sales' %}
+            <span>Sales</span>
+          </a>
+          <a href="{% url 'customers:customer_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='customers' %}
+            <span>Customers</span>
+          </a>
+          <a href="{% url 'returns:customer_return_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='customer_returns' %}
+            <span>Customer Returns</span>
+          </a>
+
+          <div class="border-t my-2"></div>
+          <div class="px-3 py-1 text-xs text-gray-500 uppercase">Inventory</div>
+          <a href="{% url 'products:product_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='products' %}
+            <span>Products</span>
+          </a>
+          <a href="{% url 'vendor:purchase_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='purchases' %}
+            <span>Purchases</span>
+          </a>
+          <a href="{% url 'vendor:vendor_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='vendors' %}
+            <span>Vendors</span>
+          </a>
+          <a href="{% url 'returns:vendor_return_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='vendor_returns' %}
+            <span>Vendor Returns</span>
+          </a>
+
+          <div class="border-t my-2"></div>
+          <div class="px-3 py-1 text-xs text-gray-500 uppercase">Finance</div>
+          <a href="{% url 'sales:installment_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='installments' %}
+            <span>Installments</span>
+          </a>
+          <a href="{% url 'sales:ledger' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='ledger' %}
+            <span>Ledger</span>
+          </a>
+          <a href="{% url 'sales:misc_charge_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='misc' %}
+            <span>Misc Charges</span>
+          </a>
         </nav>
       </aside>
     </div>
@@ -74,7 +164,6 @@
               <a href="{% url 'accounts:logout' %}" class="text-sm text-blue-600 hover:underline">Logout</a>
             {% else %}
               <a href="{% url 'accounts:login' %}" class="text-sm text-blue-600 hover:underline">Login</a>
-              <a href="{% url 'accounts:register' %}" class="text-sm text-blue-600 hover:underline">Register</a>
             {% endif %}
           </div>
         </div>

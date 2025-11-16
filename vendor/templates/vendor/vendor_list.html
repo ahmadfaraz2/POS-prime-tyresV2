@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+{% block title %}Vendors{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold">Vendors</h1>
+    <p class="text-sm text-gray-600">Manage vendors and their purchases</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <form method="get" class="flex items-center">
+      <input type="search" name="q" placeholder="Search vendors..." value="{{ q|default:'' }}" class="border rounded-l px-3 py-2 w-64" />
+      <button class="bg-gray-200 border-l px-3 py-2 rounded-r">Search</button>
+    </form>
+    <a href="{% url 'vendor:vendor_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded">Add Vendor</a>
+  </div>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+  <div class="overflow-x-auto lg:overflow-x-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Added</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for v in page_obj.object_list %}
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ v.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ v.phone|default:'—' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ v.email|default:'—' }}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ v.address|default:'—'|truncatechars:60 }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ v.created_at|date:'Y-m-d' }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+              <a href="{% url 'vendor:purchase_list' %}?vendor={{ v.id }}" class="text-blue-600 mr-3">Purchases</a>
+              <a href="{% url 'vendor:purchase_create' %}?vendor={{ v.id }}" class="bg-green-600 text-white px-2 py-1 rounded">New</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-gray-500">No vendors found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="px-6 py-4 bg-white">
+    <div class="flex items-center justify-between">
+      <div class="text-sm text-gray-600">Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }}</div>
+      <div>
+        {% if page_obj.has_other_pages %}
+          <nav class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+              <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="px-3 py-2 bg-white border">Previous</a>
+            {% endif %}
+            <span class="px-4 py-2 bg-white border">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+              <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="px-3 py-2 bg-white border">Next</a>
+            {% endif %}
+          </nav>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

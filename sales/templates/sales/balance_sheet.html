@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load form_tags %}
+{% block title %}Balance Sheet{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-bold">Balance Sheet</h1>
+  <p class="text-sm text-gray-600">Snapshot of assets, liabilities and equity</p>
+</div>
+
+<div class="mb-4">
+  <a href="{% url 'sales:balance_sheet_export' %}?format=csv" class="inline-block bg-blue-600 text-white px-3 py-1 rounded mr-2">Export CSV</a>
+  <a href="{% url 'sales:balance_sheet_export' %}?format=xls" class="inline-block bg-green-600 text-white px-3 py-1 rounded mr-2">Export Excel</a>
+  <a href="{% url 'sales:balance_sheet_export' %}?format=print" class="inline-block bg-gray-700 text-white px-3 py-1 rounded">Printable / PDF</a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="bg-white p-4 rounded shadow">
+    <h3 class="font-semibold">Assets</h3>
+    <div class="mt-3 text-sm text-gray-700">
+      <div class="flex justify-between"><span>Cash on hand</span><span class="font-semibold">Rs {{ cash_on_hand|currency }}</span></div>
+      <div class="flex justify-between"><span>Accounts Receivable</span><span class="font-semibold">Rs {{ accounts_receivable|currency }}</span></div>
+      <div class="flex justify-between"><span>Inventory (cost)</span><span class="font-semibold">Rs {{ inventory_value|currency }}</span></div>
+      <hr class="my-3" />
+      <div class="flex justify-between"><span class="font-semibold">Total Assets</span><span class="font-semibold">Rs {{ total_assets|currency }}</span></div>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow">
+    <h3 class="font-semibold">Liabilities</h3>
+    <div class="mt-3 text-sm text-gray-700">
+      <div class="flex justify-between"><span>Tracked liabilities</span><span class="font-semibold">Rs {{ total_liabilities|currency }}</span></div>
+      <hr class="my-3" />
+      <div class="flex justify-between"><span class="font-semibold">Total Liabilities</span><span class="font-semibold">Rs {{ total_liabilities|currency }}</span></div>
+    </div>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow">
+    <h3 class="font-semibold">Equity</h3>
+    <div class="mt-3 text-sm text-gray-700">
+      <div class="flex justify-between"><span>Owner's Equity</span><span class="font-semibold">Rs {{ equity|currency }}</span></div>
+      <hr class="my-3" />
+  <div class="flex justify-between"><span class="font-semibold">Total Liabilities + Equity</span><span class="font-semibold">Rs {{ total_liabilities|add:equity|currency }}</span></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
