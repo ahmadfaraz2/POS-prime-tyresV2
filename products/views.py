@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .models import Product
 from customers.models import Customer
 from sales.utils import create_sale_from_cart
+from django.db.models import F, ExpressionWrapper, DecimalField
 
 
 def _get_cart(request):
@@ -33,6 +34,11 @@ def product_list_view(request):
             Q(type__icontains=q) |
             Q(size__icontains=q)
         )
+    # annotate profit per unit and total profit for current stock
+    profit_per_expr = ExpressionWrapper(F('price') - F('purchasing_price'), output_field=DecimalField(max_digits=12, decimal_places=2))
+    total_profit_expr = ExpressionWrapper((F('price') - F('purchasing_price')) * F('stock_quantity'), output_field=DecimalField(max_digits=14, decimal_places=2))
+    products_qs = products_qs.annotate(profit_per=profit_per_expr, total_profit=total_profit_expr)
+
     paginator = Paginator(products_qs, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
     return render(request, 'products/product_list.html', {'page_obj': page_obj, 'q': q})
@@ -43,6 +49,7 @@ def product_create_view(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         price = request.POST.get('price')
+        purchasing_price = request.POST.get('purchasing_price')
         stock_quantity = request.POST.get('stock_quantity')
         brand = request.POST.get('brand')
         size = request.POST.get('size')
@@ -54,6 +61,7 @@ def product_create_view(request):
             product = Product.objects.create(
                 name=name,
                 price=Decimal(price),
+                purchasing_price=Decimal(purchasing_price or '0'),
                 stock_quantity=int(stock_quantity or 0),
                 brand=brand or None,
                 size=size or None,
@@ -73,6 +81,9 @@ def product_update_view(request, pk):
         price = request.POST.get('price')
         if price:
             product.price = Decimal(price)
+        purchasing_price = request.POST.get('purchasing_price')
+        if purchasing_price is not None and purchasing_price != '':
+            product.purchasing_price = Decimal(purchasing_price)
         stock_quantity = request.POST.get('stock_quantity')
         if stock_quantity is not None and stock_quantity != '':
             product.stock_quantity = int(stock_quantity)

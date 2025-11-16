@@ -5,7 +5,10 @@ class Product(models.Model):
     brand = models.CharField(max_length=255, blank=True, null=True)
     size = models.CharField(max_length=64, blank=True, null=True)
     type = models.CharField(max_length=128, blank=True, null=True)
+    # selling price
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    # purchasing price (cost price) to calculate profit
+    purchasing_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock_quantity = models.PositiveIntegerField(default=0)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

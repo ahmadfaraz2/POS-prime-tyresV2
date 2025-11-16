@@ -45,7 +45,7 @@
           <a href="{% url 'products:product_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Products</a>
           <a href="{% url 'customers:customer_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Customers</a>
           <a href="{% url 'sales:sale_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Sales</a>
-          <a href="{% url 'sales:ledger' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Ledger</a>
+          {% comment %} <a href="{% url 'sales:ledger' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Ledger</a> {% endcomment %}
           <a href="{% url 'sales:installment_list' %}" class="block px-3 py-2 rounded hover:bg-gray-100">Installments</a>
         </nav>
       </aside>
