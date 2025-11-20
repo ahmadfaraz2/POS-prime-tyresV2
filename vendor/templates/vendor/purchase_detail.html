@@ -53,6 +53,10 @@
 
   {% if purchase.is_received %}
     <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded">Received</span>
+    <form method="post" action="{% url 'vendor:purchase_revoke' purchase.id %}" onsubmit="return confirm('Revoke received status? This will attempt to decrement product stock.');">
+      {% csrf_token %}
+      <button type="submit" class="inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Revoke</button>
+    </form>
   {% else %}
     <form method="post" action="{% url 'vendor:purchase_receive' purchase.id %}">
       {% csrf_token %}

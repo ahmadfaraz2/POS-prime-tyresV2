@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from .models import Vendor, Purchase, PurchaseItem
 from products.models import Product
 from django.views.decorators.http import require_POST
+from django.db import transaction
 
 
 
@@ -151,4 +152,38 @@ def purchase_mark_received(request, pk):
     purchase.is_received = True
     purchase.save()
     messages.success(request, f'Purchase marked as received. Stock increased by {total_added} items.')
+    return redirect('vendor:purchase_detail', pk=pk)
+
+
+@login_required
+@require_POST
+def purchase_revoke(request, pk):
+    """Revoke a previously received purchase: attempt to decrement product stock and unset is_received."""
+    purchase = get_object_or_404(Purchase.objects.prefetch_related('items__product'), pk=pk)
+    if not purchase.is_received:
+        messages.info(request, 'This purchase is not marked as received.')
+        return redirect('vendor:purchase_detail', pk=pk)
+
+    # Validate availability first under a transaction to avoid race conditions
+    with transaction.atomic():
+        # First pass: lock product rows and verify stock sufficiency
+        for item in purchase.items.select_related('product').all():
+            product = Product.objects.select_for_update().get(pk=item.product_id)
+            current_stock = product.stock_quantity or 0
+            if current_stock < item.quantity:
+                messages.error(request, f"Cannot revoke: product '{product.name}' stock ({current_stock}) is less than quantity to remove ({item.quantity}).")
+                return redirect('vendor:purchase_detail', pk=pk)
+
+        # Second pass: decrement stock now that checks passed
+        total_removed = 0
+        for item in purchase.items.select_related('product').all():
+            product = Product.objects.select_for_update().get(pk=item.product_id)
+            product.stock_quantity = (product.stock_quantity or 0) - item.quantity
+            product.save()
+            total_removed += item.quantity
+
+        purchase.is_received = False
+        purchase.save()
+
+    messages.success(request, f'Received status revoked. Stock decreased by {total_removed} items.')
     return redirect('vendor:purchase_detail', pk=pk)
