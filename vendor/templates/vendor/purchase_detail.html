@@ -4,7 +4,11 @@
 {% block content %}
 <div class="mb-6">
   <h1 class="text-2xl font-bold">Purchase #{{ purchase.id }}</h1>
-  <p class="text-sm text-gray-600">Vendor: {{ purchase.vendor.name }}</p>
+  <p class="text-sm text-gray-600">Vendor: {{ purchase.vendor.name }}
+    {% if purchase.vendor.phone %}
+      — <a href="tel:+{{ purchase.vendor.phone }}" class="text-sm text-indigo-600">+{{ purchase.vendor.phone }}</a>
+    {% endif %}
+  </p>
 </div>
 
 <div class="bg-white rounded shadow p-4 max-w-3xl">
@@ -47,7 +51,9 @@
 </div>
  
 <div class="mt-4 flex items-center space-x-3">
-  <a href="{% url 'vendor:purchase_print' purchase.id %}" target="_blank" class="inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Print Receipt</a>
+  <a href="{% url 'vendor:purchase_print_pdf' purchase.id %}" target="_blank" class="inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Print Receipt (PDF)</a>
+
+  <a href="{% url 'vendor:purchase_whatsapp' purchase.id %}" target="_blank" class="inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Send via WhatsApp</a>
 
   <a href="{% url 'returns:vendor_return_create' %}?from_purchase={{ purchase.id }}" class="inline-block bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Create Vendor Return</a>
 

@@ -8,6 +8,40 @@ from .models import Vendor, Purchase, PurchaseItem
 from products.models import Product
 from django.views.decorators.http import require_POST
 from django.db import transaction
+from django.urls import reverse
+from urllib.parse import quote_plus
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+import io
+try:
+    from xhtml2pdf import pisa
+except Exception:
+    pisa = None
+
+
+def _normalize_phone_for_storage(phone: str) -> str:
+    """Return sanitized phone digits for storage/wa.me usage.
+
+    - Removes all non-digit characters.
+    - If number starts with a single leading '0', convert to Pakistan country code '92'.
+    - If empty after stripping, return empty string.
+    """
+    if not phone:
+        return ''
+    digits = ''.join(ch for ch in phone if ch.isdigit())
+    if not digits:
+        return ''
+    # Convert local Pakistan leading 0 -> 92 (e.g., 03001234567 -> 923001234567)
+    if digits.startswith('0'):
+        # Avoid double-conversion if user already entered country code like 0092
+        # If the number starts with 00 (international dialing prefix), leave as-is
+        if digits.startswith('00'):
+            # strip leading zeros but keep rest (e.g., 00923... -> 923...)
+            digits = digits.lstrip('0')
+        else:
+            digits = '92' + digits.lstrip('0')
+    return digits
+
 
 
 
@@ -25,7 +59,8 @@ def vendor_list(request):
 def vendor_create(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        phone = request.POST.get('phone')
+        phone_raw = request.POST.get('phone')
+        phone = _normalize_phone_for_storage(phone_raw)
         email = request.POST.get('email')
         address = request.POST.get('address')
         if not name:
@@ -120,6 +155,55 @@ def purchase_print(request, pk):
     items = list(purchase.items.all())
     items_total = sum((item.subtotal or Decimal('0')) for item in items)
     return render(request, 'vendor/purchase_receipt_print.html', {'purchase': purchase, 'copy_labels': copy_labels, 'items_total': items_total})
+
+
+@login_required
+def purchase_print_pdf(request, pk):
+    """Return the purchase receipt as a PDF file using xhtml2pdf."""
+    purchase = get_object_or_404(Purchase.objects.select_related('vendor').prefetch_related('items__product'), pk=pk)
+    items = list(purchase.items.all())
+    items_total = sum((item.subtotal or Decimal('0')) for item in items)
+    context = {'purchase': purchase, 'copy_labels': ['Vendor Copy'], 'items_total': items_total}
+    html = render_to_string('vendor/purchase_receipt_print.html', context)
+
+    if pisa is None:
+        messages.error(request, 'PDF generation is not available (missing xhtml2pdf).')
+        return redirect('vendor:purchase_print', pk=pk)
+
+    result = io.BytesIO()
+    # Create PDF
+    pdf_status = pisa.CreatePDF(io.BytesIO(html.encode('utf-8')), dest=result)
+    if pdf_status.err:
+        messages.error(request, 'Error generating PDF')
+        return redirect('vendor:purchase_print', pk=pk)
+
+    result.seek(0)
+    response = HttpResponse(result.getvalue(), content_type='application/pdf')
+    filename = f"purchase_{purchase.id}.pdf"
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+    return response
+
+
+@login_required
+def purchase_send_whatsapp(request, pk):
+    """Redirect to WhatsApp Web with a prefilled message containing the absolute receipt URL."""
+    purchase = get_object_or_404(Purchase.objects.select_related('vendor').prefetch_related('items__product'), pk=pk)
+    # Build absolute URL to the PDF receipt
+    receipt_path = reverse('vendor:purchase_print_pdf', args=[purchase.id])
+    absolute_receipt_url = request.build_absolute_uri(receipt_path)
+    message = f"Purchase Receipt #{purchase.id} - {absolute_receipt_url}"
+    # If vendor has a phone number, attempt to send directly to that number using wa.me/<number>?text=...
+    phone = (purchase.vendor.phone or '').strip()
+    digits = ''.join(ch for ch in phone if ch.isdigit())
+    if digits:
+        # If number starts with '0' we avoid guessing country code — fall back to generic share
+        if digits.startswith('0'):
+            wa_link = f"https://wa.me/?text={quote_plus(message)}"
+        else:
+            wa_link = f"https://wa.me/{digits}?text={quote_plus(message)}"
+    else:
+        wa_link = f"https://wa.me/?text={quote_plus(message)}"
+    return redirect(wa_link)
 
 
 @login_required

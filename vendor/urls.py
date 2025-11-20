@@ -12,4 +12,6 @@ urlpatterns = [
     path('purchases/<int:pk>/print/', views.purchase_print, name='purchase_print'),
     path('purchases/<int:pk>/receive/', views.purchase_mark_received, name='purchase_receive'),
     path('purchases/<int:pk>/revoke/', views.purchase_revoke, name='purchase_revoke'),
+    path('purchases/<int:pk>/whatsapp/', views.purchase_send_whatsapp, name='purchase_whatsapp'),
+    path('purchases/<int:pk>/print/pdf/', views.purchase_print_pdf, name='purchase_print_pdf'),
 ]
