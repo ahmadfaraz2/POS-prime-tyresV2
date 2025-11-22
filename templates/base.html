@@ -59,6 +59,10 @@
           {% include 'includes/sidebar_icon.html' with icon='installments' %}
           <span>Installments</span>
         </a>
+        <a href="{% url 'balancesheet:balancesheet_view' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+          {% include 'includes/sidebar_icon.html' with icon='balancesheet' %}
+          <span>Balance Sheet</span>
+        </a>
         <a href="{% url 'sales:ledger' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
           {% include 'includes/sidebar_icon.html' with icon='ledger' %}
           <span>Ledger</span>
@@ -128,6 +132,10 @@
           <a href="{% url 'sales:installment_list' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
             {% include 'includes/sidebar_icon.html' with icon='installments' %}
             <span>Installments</span>
+          </a>
+          <a href="{% url 'balancesheet:balancesheet_view' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+            {% include 'includes/sidebar_icon.html' with icon='balancesheet' %}
+            <span>Balance Sheet</span>
           </a>
           <a href="{% url 'sales:ledger' %}" class="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
             {% include 'includes/sidebar_icon.html' with icon='ledger' %}

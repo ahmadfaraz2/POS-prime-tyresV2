@@ -11,5 +11,6 @@ urlpatterns = [
     path('vendor/', include('vendor.urls')),
     path('returns/', include('returns.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('balancesheet/', include('balancesheet.urls')),
     path('', RedirectView.as_view(pattern_name='dashboard:dashboard_view', permanent=False)),
 ]

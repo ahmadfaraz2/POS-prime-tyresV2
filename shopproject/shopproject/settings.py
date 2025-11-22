@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'dashboard',
     'vendor',
     'returns',
+    'balancesheet',
 ]
 
 MIDDLEWARE = [

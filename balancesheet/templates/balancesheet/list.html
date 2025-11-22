@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Balance Sheet{% endblock %}
+{% block header_title %}Balance Sheet{% endblock %}
+
+{% block content %}
+  <div class="bg-white shadow rounded p-4">
+    <h2 class="text-lg font-semibold mb-4">Balance Sheet</h2>
+
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <h3 class="font-semibold">Assets</h3>
+        <table class="w-full mt-2">
+          {% for a, b in assets %}
+          <tr>
+            <td class="py-1">{{ a.name }}</td>
+            <td class="py-1 text-right">Rs {{ b }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="border-t">
+            <td class="py-2 font-semibold">Total Assets</td>
+            <td class="py-2 text-right font-semibold">Rs {{ assets_total }}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div>
+        <h3 class="font-semibold">Liabilities & Equity</h3>
+        <table class="w-full mt-2">
+          {% for a, b in liabilities %}
+          <tr>
+            <td class="py-1">{{ a.name }}</td>
+            <td class="py-1 text-right">Rs {{ b }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="border-t">
+            <td class="py-2 font-semibold">Total Liabilities</td>
+            <td class="py-2 text-right font-semibold">Rs {{ liabilities_total }}</td>
+          </tr>
+          <tr><td colspan="2" class="py-2"></td></tr>
+          {% for a, b in equity %}
+          <tr>
+            <td class="py-1">{{ a.name }}</td>
+            <td class="py-1 text-right">Rs {{ b }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="border-t">
+            <td class="py-2 font-semibold">Total Equity (incl. Net Income)</td>
+            <td class="py-2 text-right font-semibold">Rs {{ equity_with_income }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
