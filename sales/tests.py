@@ -47,7 +47,7 @@ class LedgerViewTests(TestCase):
     def _create_installment_sale(self, total=Decimal('3000.00')):
         sale = Sale.objects.create(customer=self.customer, created_by=self.user, payment_type='INSTALLMENT', total_amount=total, is_completed=True)
         SaleItem.objects.create(sale=sale, product=self.product, quantity=3, unit_price=Decimal('1000.00'), subtotal=total)
-        plan = InstallmentPlan.objects.create(sale=sale, total_installments=3, installment_amount=Decimal('1000.00'), first_due_date=timezone.now().date())
+        plan = InstallmentPlan.objects.create(sale=sale)
         return sale, plan
 
     def test_ledger_running_balance(self):

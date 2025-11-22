@@ -11,8 +11,7 @@
         <th class="text-left p-3">Sale #</th>
         <th class="text-left p-3">Customer</th>
         <th class="text-left p-3">Status</th>
-        <th class="text-left p-3">Installments</th>
-        <th class="text-left p-3">Installment Amount</th>
+        <th class="text-left p-3">Total Due</th>
         <th class="text-left p-3">Paid</th>
         <th class="text-left p-3">Outstanding</th>
         <th class="p-3"></th>
@@ -28,8 +27,7 @@
             {{ row.plan.get_status_display }}
           </span>
         </td>
-        <td class="p-3">{{ row.plan.total_installments }}</td>
-        <td class="p-3">Rs {{ row.plan.installment_amount|currency }}</td>
+        <td class="p-3">Rs {{ row.total_due|currency }}</td>
         <td class="p-3">Rs {{ row.paid|currency }}</td>
         <td class="p-3">Rs {{ row.outstanding|currency }}</td>
         <td class="p-3 text-right"><a href="{% url 'sales:sale_detail' row.plan.sale.id %}" class="text-blue-600">View</a></td>

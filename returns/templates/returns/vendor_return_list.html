@@ -9,8 +9,9 @@
       <thead class="bg-gray-50">
         <tr>
           <th class="text-left w-1/12 px-2 py-2">ID</th>
-          <th class="text-left w-1/2 px-2 py-2">Vendor</th>
-          <th class="text-left w-1/4 px-2 py-2">Date</th>
+          <th class="text-left w-1/4 px-2 py-2">Vendor</th>
+          <th class="text-left w-1/3 px-2 py-2">Products (Qty)</th>
+          <th class="text-left w-1/6 px-2 py-2">Date</th>
           <th class="text-right w-1/6 px-2 py-2">Total</th>
         </tr>
       </thead>
@@ -19,6 +20,13 @@
         <tr class="border-t">
           <td class="py-2 px-2">{{ r.id }}</td>
           <td class="py-2 px-2">{{ r.vendor.name }}</td>
+          <td class="py-2 px-2">
+            {% for it in r.items.all %}
+              <div class="text-sm">{{ it.product.name }} ({{ it.quantity }})</div>
+            {% empty %}
+              <div class="text-sm text-gray-500">No items</div>
+            {% endfor %}
+          </td>
           <td class="py-2 px-2">{{ r.date|date:"Y-m-d" }}</td>
           <td class="py-2 px-2 text-right">Rs {{ r.total_amount|currency }}</td>
         </tr>

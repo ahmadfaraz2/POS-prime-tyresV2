@@ -130,11 +130,13 @@ def sale_detail(request, pk):
     else:
         payments = []
         total_paid = Decimal('0')
+    outstanding = (sale.total_amount - total_paid) if sale.total_amount else Decimal('0')
     return render(request, 'sales/sale_detail.html', {
         'sale': sale,
         'plan': plan,
         'payments': payments,
         'total_paid': total_paid,
+        'outstanding': outstanding,
     })
 
 
@@ -166,13 +168,19 @@ def installment_payment_create(request, plan_id):
         except Exception:
             messages.error(request, 'Invalid amount.')
             return redirect('sales:installment_payment_create', plan_id=plan.id)
-        
+        # Prevent accidental overpayment: compute outstanding and validate
+        total_paid = plan.payments.aggregate(s=Sum('amount_paid'))['s'] or Decimal('0')
+        total_due = plan.sale.total_amount or Decimal('0')
+        outstanding = total_due - total_paid
+        if amount > outstanding and outstanding > Decimal('0'):
+            messages.error(request, f'Amount exceeds outstanding balance (Rs {outstanding}). Enter an amount less than or equal to the outstanding.')
+            return redirect('sales:installment_payment_create', plan_id=plan.id)
+
+        # Record payment
         InstallmentPayment.objects.create(plan=plan, amount_paid=amount)
-        
+
         # Check if installment is fully paid
         total_paid = plan.payments.aggregate(s=Sum('amount_paid'))['s'] or Decimal('0')
-        total_due = plan.sale.total_amount
-        
         if total_paid >= total_due:
             plan.status = 'PAID'
             plan.save(update_fields=['status'])
@@ -181,14 +189,63 @@ def installment_payment_create(request, plan_id):
             messages.success(request, 'Payment recorded.')
         
         return redirect('sales:sale_detail', pk=plan.sale.id)
-    # Simple inline form
-    return render(request, 'sales/sale_form.html', {'plan': plan})
+
+    return redirect('sales:sale_detail', pk=plan.sale.id)
 
 
 @login_required
 def print_receipt_view(request, sale_id):
     sale = get_object_or_404(Sale.objects.select_related('customer').prefetch_related('items__product'), pk=sale_id)
-    return render(request, 'sales/receipt.html', {'sale': sale})
+
+    # Compute "paid now" amount per item for display on the receipt.
+    paid_now_map = {}
+    items = list(sale.items.all())
+    total = sale.total_amount or Decimal('0')
+
+    if sale.payment_type == 'FULL':
+        # Full payment: each item is fully paid now
+        for it in items:
+            paid_now_map[it.id] = it.subtotal
+    else:
+        # INSTALLMENT: find an initial payment recorded at sale creation
+        initial_amt = Decimal('0')
+        plan = getattr(sale, 'installment_plan', None)
+        if plan:
+            # Try to find a payment that occurred on the same date as the sale
+            same_day_pay = plan.payments.filter(payment_date=sale.date.date()).order_by('id').first()
+            if same_day_pay:
+                initial_amt = same_day_pay.amount_paid
+            else:
+                # Fallback: take the earliest payment if any
+                first_pay = plan.payments.order_by('payment_date', 'id').first()
+                if first_pay:
+                    initial_amt = first_pay.amount_paid
+
+        # Distribute initial_amt proportionally across items by subtotal
+        if initial_amt and total > 0:
+            allocated = []
+            running = Decimal('0')
+            for it in items:
+                share = (it.subtotal / total) * initial_amt
+                share_q = share.quantize(Decimal('0.01'))
+                allocated.append(share_q)
+                running += share_q
+
+            # Fix rounding remainder
+            remainder = initial_amt - running
+            if allocated:
+                allocated[-1] = (allocated[-1] + remainder).quantize(Decimal('0.01'))
+
+            for it, a in zip(items, allocated):
+                paid_now_map[it.id] = a
+        else:
+            for it in items:
+                paid_now_map[it.id] = Decimal('0')
+
+    # Sum paid now amounts for pending calculation
+    total_paid_now = sum((v for v in paid_now_map.values()), Decimal('0'))
+    pending = (sale.total_amount - total_paid_now) if sale.total_amount else Decimal('0')
+    return render(request, 'sales/receipt.html', {'sale': sale, 'paid_now_map': paid_now_map, 'pending': pending, 'total_paid_now': total_paid_now})
 
 
 @login_required
@@ -210,6 +267,8 @@ def print_receipt_full(request, sale_id):
     return render(request, 'sales/receipt_print.html', {
         'sale': sale,
         'payments': payments,
+        'total_paid': sum((p.amount_paid for p in payments), Decimal('0')),
+        'outstanding': (sale.total_amount - sum((p.amount_paid for p in payments), Decimal('0'))),
         'copy_labels': copy_labels,
     })
 

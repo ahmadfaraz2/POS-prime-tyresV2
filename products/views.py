@@ -200,12 +200,15 @@ def checkout_view(request):
 
         installment_data = None
         if payment_type == 'INSTALLMENT':
-            total_installments = int(request.POST.get('total_installments', '1'))
-            first_due_date = request.POST.get('first_due_date')  # YYYY-MM-DD
-            installment_data = {
-                'total_installments': total_installments,
-                'first_due_date': first_due_date,
-            }
+            # New behaviour: accept an optional free-text note for installment
+            # plans and an optional initial payment amount to record now.
+            note = request.POST.get('installment_note', '').strip()
+            initial_payment_str = request.POST.get('initial_payment', '').strip() or '0'
+            try:
+                initial_payment = Decimal(initial_payment_str)
+            except Exception:
+                initial_payment = Decimal('0')
+            installment_data = {'notes': note, 'initial_payment': str(initial_payment)} if (note or initial_payment > 0) else None
 
         try:
             sale = create_sale_from_cart(

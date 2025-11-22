@@ -42,6 +42,7 @@
           <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Selling</th>
           <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Purchasing</th>
           <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Stock</th>
+          <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
           <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Add to Cart</th>
           <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Manage</th>
         </tr>
@@ -62,7 +63,7 @@
             </div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <div class="text-lg font-bold text-gray-900">Rs {{ product.price|currency }}</div>
+            <div class="text-md font-bold text-gray-900">Rs {{ product.price|currency }}</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <div class="text-sm text-gray-700">Rs {{ product.purchasing_price|currency }}</div>

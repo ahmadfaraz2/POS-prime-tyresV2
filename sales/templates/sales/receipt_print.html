@@ -364,24 +364,10 @@
       <!-- Payment Information -->
       {% if sale.payment_type == 'INSTALLMENT' %}
       <div class="payment-info">
-        <div class="title">📋 Installment Payment Plan</div>
-        <div class="detail">
-          <strong>Total Installments:</strong> {{ sale.installment_plan.total_installments }}
-        </div>
-        <div class="detail">
-          <strong>Installment Amount:</strong> Rs {{ sale.installment_plan.installment_amount|currency }} per installment
-        </div>
-        <div class="detail">
-          <strong>First Due Date:</strong> {{ sale.installment_plan.first_due_date|date:"F d, Y" }}
-        </div>
-        <div class="detail">
-          <strong>Status:</strong> 
-          {% if sale.installment_plan.status == 'PAID' %}
-            <span style="color: #059669; font-weight: bold;">✓ PAID</span>
-          {% else %}
-            <span style="color: #dc2626; font-weight: bold;">⏳ PENDING</span>
-          {% endif %}
-        </div>
+        <div class="title">📋 Installment Payments</div>
+        <div class="detail"><strong>Total Due:</strong> Rs {{ sale.total_amount|currency }}</div>
+        <div class="detail"><strong>Total Paid:</strong> Rs {{ total_paid|currency }}</div>
+        <div class="detail"><strong>Outstanding:</strong> Rs {{ outstanding|currency }}</div>
 
         {% if payments %}
         <div class="installment-schedule">

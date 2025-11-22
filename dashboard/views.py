@@ -56,9 +56,10 @@ def dashboard_view(request):
     # Profit calculations
     profit_expr = ExpressionWrapper((F('unit_price') - F('product__purchasing_price')) * F('quantity'), output_field=DecimalField(max_digits=14, decimal_places=2))
 
-    sales_today_profit = SaleItem.objects.filter(sale__date__gte=today_start).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
-    sales_this_week_profit = SaleItem.objects.filter(sale__date__gte=week_start).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
-    sales_this_month_profit = SaleItem.objects.filter(sale__date__gte=month_start).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
+    # Only include completed sales in profit computations
+    sales_today_profit = SaleItem.objects.filter(sale__date__gte=today_start, sale__is_completed=True).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
+    sales_this_week_profit = SaleItem.objects.filter(sale__date__gte=week_start, sale__is_completed=True).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
+    sales_this_month_profit = SaleItem.objects.filter(sale__date__gte=month_start, sale__is_completed=True).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
 
     total_gross_profit = SaleItem.objects.filter(sale__is_completed=True).aggregate(s=Sum(profit_expr))['s'] or Decimal('0')
 

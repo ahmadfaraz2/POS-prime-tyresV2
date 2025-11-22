@@ -5,7 +5,8 @@ from django.shortcuts import get_object_or_404
 
 from products.models import Product
 from customers.models import Customer
-from .models import Sale, SaleItem, InstallmentPlan
+from .models import Sale, SaleItem, InstallmentPlan, InstallmentPayment
+from django.db.models import Sum
 
 
 def create_sale_from_cart(user, customer_id, cart, payment_type, installment_data=None):
@@ -42,22 +43,30 @@ def create_sale_from_cart(user, customer_id, cart, payment_type, installment_dat
             product.save(update_fields=['stock_quantity'])
 
         if payment_type == 'INSTALLMENT':
-            if not installment_data:
-                raise ValueError('Installment data is required for installment payments')
-            total_installments = int(installment_data.get('total_installments') or 1)
-            first_due_date_str = installment_data.get('first_due_date')
-            first_due_date = date.fromisoformat(first_due_date_str) if first_due_date_str else date.today()
-            
-            # Calculate base installment amount (floored to 2 decimals)
-            base_amount = (sale.total_amount / Decimal(total_installments)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            
-            # The installment_amount stored here is the base per-installment amount
-            # Any remainder from rounding will be added to the final installment payment manually
-            InstallmentPlan.objects.create(
+            # New behaviour: create a simple InstallmentPlan record which will
+            # act as a grouping for ad-hoc `InstallmentPayment` entries. Do not
+            # pre-create scheduled payment rows.
+            notes = ''
+            if installment_data:
+                notes = installment_data.get('notes', '')
+            plan = InstallmentPlan.objects.create(
                 sale=sale,
-                total_installments=total_installments,
-                installment_amount=base_amount,
-                first_due_date=first_due_date,
+                notes=notes,
             )
+
+            # If an initial payment was provided at checkout, record it now.
+            if installment_data:
+                init_amt = installment_data.get('initial_payment')
+                try:
+                    init_amt_dec = Decimal(str(init_amt)) if init_amt is not None else Decimal('0')
+                except Exception:
+                    init_amt_dec = Decimal('0')
+                if init_amt_dec and init_amt_dec > 0:
+                    InstallmentPayment.objects.create(plan=plan, amount_paid=init_amt_dec)
+                    # If the initial payment covers the full sale amount, mark plan PAID
+                    total_paid = plan.payments.aggregate(s=Sum('amount_paid'))['s'] or Decimal('0')
+                    if total_paid >= sale.total_amount:
+                        plan.status = 'PAID'
+                        plan.save(update_fields=['status'])
 
         return sale

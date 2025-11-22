@@ -29,9 +29,11 @@ class InstallmentPlan(models.Model):
         ('PAID', 'Paid'),
     ]
     sale = models.OneToOneField(Sale, on_delete=models.CASCADE, related_name='installment_plan')
-    total_installments = models.PositiveIntegerField()
-    installment_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    first_due_date = models.DateField()
+    # Previously we stored a fixed schedule here. New behaviour: do not pre-create
+    # specific installment entries. The plan now acts as a single record that
+    # groups ad-hoc `InstallmentPayment` records against the `Sale`.
+    # Keep minimal metadata and status.
+    notes = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     created_at = models.DateTimeField(auto_now_add=True)
 
