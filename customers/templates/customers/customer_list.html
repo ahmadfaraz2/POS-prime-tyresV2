@@ -33,7 +33,7 @@
     <tbody>
       {% for c in page_obj.object_list %}
         <tr class="border-t">
-          <td class="p-3">{{ c.name }}</td>
+          <td class="p-3"><a href="{% url 'customers:customer_detail' c.id %}" class="text-blue-600 hover:underline">{{ c.name }}</a></td>
           <td class="p-3">{{ c.phone|default:'-' }}</td>
           <td class="p-3">{{ c.email|default:'-' }}</td>
           <td class="p-3 text-right">
