@@ -1,84 +1,97 @@
 {% extends 'base.html' %}
-{% load form_tags %}
-{% block title %}Sale {{ sale.id }}{% endblock %}
+{% load humanize %}
+{% block title %}Sale #{{ sale.id }} Details{% endblock %}
 {% block content %}
-<div class="flex items-center justify-between mb-4">
-  <h1 class="text-2xl font-semibold">Sale #{{ sale.id }}</h1>
-  <div class="flex items-center gap-2">
-    <a href="{% url 'returns:customer_return_create' %}?from_sale={{ sale.id }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded">Create Customer Return</a>
-    <a href="{% url 'sales:receipt_print' sale.id %}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-    </svg>
-    Print Receipt
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <div class="flex justify-between items-center border-b pb-3 mb-4">
+    <h1 class="text-3xl font-bold text-gray-800">Sale #{{ sale.id }} Details</h1>
+    <a href="{% url 'sales:receipt_print' sale.pk %}" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition duration-150 shadow-md flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm4 9V8h2v5h-2z" clip-rule="evenodd"></path></svg>
+        <span>Print Receipt</span>
     </a>
-  </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-  <div class="md:col-span-2 bg-white rounded shadow">
-    <table class="w-full">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="text-left p-3">Product</th>
-          <th class="text-left p-3">Qty</th>
-          <th class="text-left p-3">Unit Price</th>
-          <th class="text-left p-3">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in sale.items.all %}
-        <tr class="border-t">
-          <td class="p-3">{{ item.product.name }}</td>
-          <td class="p-3">{{ item.quantity }}</td>
-          <td class="p-3">Rs {{ item.unit_price|currency }}</td>
-          <td class="p-3">Rs {{ item.subtotal|currency }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <div class="p-4 text-right">Total: <strong>Rs {{ sale.total_amount|currency }}</strong></div>
-  </div>
-  <div>
-    <div class="bg-white rounded shadow p-4">
-      <div class="text-sm text-gray-600">Customer</div>
-      <div class="font-medium">{{ sale.customer.name }}</div>
-      <div class="text-sm text-gray-600 mt-2">Payment Type</div>
-      <div class="font-medium">{{ sale.payment_type }}</div>
-      <div class="mt-4">
-        <a href="{% url 'sales:receipt' sale.id %}" class="bg-blue-600 text-white px-4 py-2 rounded">Print Receipt</a>
-      </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+            <div>
+                <p class="font-semibold">Customer:</p>
+                <p>{{ sale.customer.name }} ({{ sale.customer.email }})</p>
+            </div>
+            <div>
+                <p class="font-semibold">Sale Date:</p>
+                <p>{{ sale.date|date:"F j, Y, g:i a" }}</p>
+            </div>
+            <div>
+                <p class="font-semibold">Total Amount:</p>
+                <p class="text-green-700 font-bold text-xl">Rs {{ sale.total_amount|floatformat:0|intcomma }}</p>
+            </div>
+            <div>
+                <p class="font-semibold">Payment Type:</p>
+                <p>
+                    <span class="px-2 inline-flex text-sm leading-5 font-semibold rounded-full 
+                        {% if sale.payment_type == 'FULL' %}bg-green-100 text-green-800{% else %}bg-orange-100 text-orange-800{% endif %}">
+                        {{ sale.get_payment_type_display }}
+                    </span>
+                </p>
+            </div>
+        </div>
     </div>
 
-    {% if plan %}
-    <div class="bg-white rounded shadow p-4 mt-4">
-      <h2 class="font-semibold mb-2">Installment Plan</h2>
-      <div class="mb-2">
-        <span class="inline-block px-3 py-1 rounded text-sm {% if plan.status == 'PAID' %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
-          {{ plan.get_status_display }}
-        </span>
-      </div>
-      <div class="mt-2">Total due: <strong>Rs {{ sale.total_amount|currency }}</strong></div>
-      <div class="mt-2">Total paid: <strong>Rs {{ total_paid|currency }}</strong></div>
-      <div class="mt-2">Outstanding: <strong>Rs {{ outstanding|currency }}</strong></div>
-      <h3 class="mt-3 font-medium">Payments</h3>
-      <ul class="list-disc list-inside text-sm">
-        {% for p in payments %}
-          <li>{{ p.payment_date }} — Rs {{ p.amount_paid|currency }}</li>
-        {% empty %}
-          <li>No payments yet</li>
-        {% endfor %}
-      </ul>
-      {% if plan.status != 'PAID' %}
-      <form method="post" action="{% url 'sales:installment_payment_create' plan.id %}" class="mt-3 flex gap-2">
-        {% csrf_token %}
-        <input name="amount" type="number" step="0.01" class="border rounded px-3 py-2" placeholder="Amount" />
-        <button class="bg-green-600 text-white px-4 py-2 rounded">Record Payment</button>
-      </form>
-      {% else %}
-      <div class="mt-3 text-sm text-green-600">✓ All installments paid</div>
-      {% endif %}
+    <div class="bg-white p-6 rounded-lg shadow-lg">
+        <h2 class="text-2xl font-semibold text-gray-800 border-b pb-3 mb-4">Items Sold</h2>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for item in sale.items.all %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.product.name }} ({{ item.product.brand }})</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.quantity }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">Rs {{ item.unit_price|floatformat:0|intcomma }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right">Rs {{ item.subtotal|floatformat:0|intcomma }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+
+    {% if sale.payment_type == 'INSTALLMENT' and sale.installment_plan %}
+    {% with plan=sale.installment_plan %}
+    <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-orange-200">
+        <div class="flex justify-between items-center border-b pb-3 mb-4">
+            <h2 class="text-2xl font-semibold text-orange-700">Installment Plan</h2>
+            {% if plan.status != 'PAID' %}
+            <a href="{% url 'sales:installment_payment_create' plan.pk %}" class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded transition duration-150 shadow-md">
+                Record Payment
+            </a>
+            {% endif %}
+        </div>
+
+        {% include 'sales/_installment_summary.html' with plan=plan %}
+        
+        <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-3 border-t pt-4">Payment History</h3>
+        <ul class="space-y-2">
+            {% for payment in plan.payments.all %}
+            <li class="flex justify-between items-center text-sm p-2 border rounded-md">
+                <span class="text-gray-700">{{ payment.payment_date|date:"Y-m-d" }}</span>
+                <span class="font-medium text-green-600">Rs {{ payment.amount_paid|floatformat:2 }}</span>
+            </li>
+            {% empty %}
+            <li class="text-sm text-gray-500">No payments recorded yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endwith %}
     {% endif %}
-  </div>
+    
+    <div class="text-center pt-4">
+        <a href="{% url 'sales:sale_list' %}" class="text-primary-blue hover:text-blue-800">← Back to Sales List</a>
+    </div>
 </div>
 {% endblock %}
