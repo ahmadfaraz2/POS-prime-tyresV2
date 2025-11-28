@@ -215,6 +215,49 @@ def purchase_detail(request, pk):
 
 
 @login_required
+def vendor_detail(request, pk):
+    vendor = get_object_or_404(Vendor, pk=pk)
+
+    # All purchases for this vendor (paginated)
+    purchases_qs = Purchase.objects.filter(vendor=vendor).select_related('created_by').prefetch_related('items__product').order_by('-date')
+    page_obj = Paginator(purchases_qs, 10).get_page(request.GET.get('page'))
+
+    # Aggregate totals and purchased products
+    total_amount = Decimal('0')
+    total_received = Decimal('0')
+    purchased = {}
+
+    for p in purchases_qs:
+        amt = p.total_amount or Decimal('0')
+        total_amount += amt
+        if p.is_received:
+            total_received += amt
+
+        for it in p.items.all():
+            prod = it.product
+            entry = purchased.get(prod.id)
+            if not entry:
+                entry = {'product': prod, 'quantity': 0, 'spent': Decimal('0')}
+                purchased[prod.id] = entry
+            entry['quantity'] += it.quantity or 0
+            entry['spent'] += it.subtotal or Decimal('0')
+
+    total_unreceived = total_amount - total_received
+
+    purchased_list = [v for k, v in purchased.items()]
+
+    context = {
+        'vendor': vendor,
+        'page_obj': page_obj,
+        'purchased_list': purchased_list,
+        'total_amount': total_amount.quantize(Decimal('0.01')),
+        'total_received': total_received.quantize(Decimal('0.01')),
+        'total_unreceived': total_unreceived.quantize(Decimal('0.01')),
+    }
+    return render(request, 'vendor/vendor_detail.html', context)
+
+
+@login_required
 @require_POST
 def purchase_mark_received(request, pk):
     """Mark a purchase as received and update product stock. POST only."""

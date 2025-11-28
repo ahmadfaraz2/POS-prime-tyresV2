@@ -1,149 +1,263 @@
 {% extends 'base.html' %}
 {% load form_tags %}
-{% block title %}Customer Detail - {{ customer.name }}{% endblock %}
-{% block header_title %}Customer: {{ customer.name }}{% endblock %}
+{% block title %}{{ customer.name }} — Customer Details{% endblock %}
+{% block header_title %}Customer Profile: {{ customer.name }} {% endblock %}
 
 {% block content %}
-  <div class="grid grid-cols-3 gap-6">
-    <div class="col-span-1 bg-white rounded shadow p-4">
-      <h3 class="font-semibold">Customer Info</h3>
-      <div class="mt-3 text-sm text-gray-700">
-        <p><strong>Name:</strong> {{ customer.name }}</p>
-        <p><strong>Phone:</strong> {{ customer.phone|default:'-' }}</p>
-        <p><strong>Email:</strong> {{ customer.email|default:'-' }}</p>
-        <p class="mt-2"><strong>Address</strong><br>{{ customer.address|linebreaksbr }}</p>
-        <div class="mt-4">
-          <a href="{% url 'customers:customer_update' customer.id %}" class="inline-block bg-blue-600 text-white px-3 py-1 rounded">Edit</a>
-          <a href="{% url 'customers:customer_list' %}" class="inline-block ml-2 text-gray-600">Back</a>
+<div class="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
+    
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+        <div class="flex items-center justify-between border-b pb-2 mb-3">
+            <h3 class="text-lg font-semibold text-gray-700 flex items-center">
+                <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                Contact Details
+            </h3>
+            <div class="flex space-x-2">
+                <a href="{% url 'customers:customer_update' customer.id %}" class="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-3 py-1 rounded-md text-xs transition duration-150 ease-in-out shadow-sm">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    Edit
+                </a>
+                <a href="{% url 'customers:customer_list' %}" class="hidden sm:inline-flex items-center border border-gray-300 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-md text-xs transition duration-150 ease-in-out">
+                    Back to List
+                </a>
+            </div>
         </div>
-      </div>
-    </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {% comment %} Data Fields {% endcomment %}
+            <div class="bg-gray-50 p-3 rounded-lg">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Name</div>
+                <div class="text-base font-semibold text-gray-800 truncate mt-0.5">{{ customer.name }}</div>
+            </div>
 
-    <div class="col-span-2 space-y-4">
-      <div class="bg-white rounded shadow p-4">
-        <h3 class="font-semibold">Summary</h3>
-        <div class="mt-3 grid grid-cols-3 gap-4">
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-sm text-gray-600">Total Purchases</div>
-            <div class="text-xl font-semibold">Rs {{ total_amount }}</div>
-          </div>
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-sm text-gray-600">Total Paid</div>
-            <div class="text-xl font-semibold">Rs {{ total_paid }}</div>
-          </div>
-          <div class="p-3 bg-gray-50 rounded">
-            <div class="text-sm text-gray-600">Remaining</div>
-            <div class="text-xl font-semibold">Rs {{ total_remaining }}</div>
-          </div>
+            <div class="bg-gray-50 p-3 rounded-lg">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</div>
+                <div class="text-base font-semibold text-gray-800 mt-0.5">{{ customer.phone|default:'-' }}</div>
+            </div>
+
+            <div class="bg-gray-50 p-3 rounded-lg md:col-span-1">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</div>
+                <div class="text-base font-semibold text-gray-800 truncate mt-0.5">{{ customer.email|default:'-' }}</div>
+            </div>
+            
+            <div class="bg-gray-50 p-3 rounded-lg md:col-span-3">
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Address</div>
+                <div class="text-sm text-gray-700 mt-0.5">{{ customer.address|truncatechars:150|default:'N/A' }}</div>
+            </div>
         </div>
-      </div>
+        
+        </div>
+    
+    <div class="my-6"></div>
 
-      <div class="bg-white rounded shadow p-4">
-        <h3 class="font-semibold">Purchased Products</h3>
-        {% if purchased_list %}
-        <table class="w-full mt-3 text-sm">
-          <thead>
-            <tr class="text-left text-gray-600">
-              <th class="py-2">Product</th>
-              <th class="py-2">Qty</th>
-              <th class="py-2 text-right">Spent</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in purchased_list %}
-            <tr class="border-t">
-              <td class="py-2">{{ item.product.name }}</td>
-              <td class="py-2">{{ item.quantity }}</td>
-              <td class="py-2 text-right">Rs {{ item.spent|floatformat:2 }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-          <p class="text-sm text-gray-500 mt-2">No products purchased yet.</p>
-        {% endif %}
-      </div>
-
-      <div class="bg-white rounded shadow p-4">
-        <h3 class="font-semibold">Sales & Payments</h3>
-        <div class="mt-3">
-          {% if page_obj.object_list %}
-            <div class="space-y-3">
-              {% for sale in page_obj.object_list %}
-                <div class="border rounded p-3">
-                  <div class="flex items-start justify-between">
-                    <div>
-                      <div class="font-semibold">Sale #{{ sale.id }} — {{ sale.date|date:'Y-m-d' }}</div>
-                      <div class="text-sm text-gray-600">Payment: {{ sale.payment_type }} — Completed: {{ sale.is_completed }}</div>
-                    </div>
-                    <div class="text-right">
-                      <div class="text-lg font-semibold">Rs {{ sale.total_amount }}</div>
-                    </div>
-                  </div>
-
-                  <div class="mt-2 grid grid-cols-2 gap-4">
-                    <div>
-                      <div class="text-sm font-semibold">Items</div>
-                      <table class="w-full text-sm mt-2">
-                        <tbody>
-                          {% for it in sale.items.all %}
-                          <tr class="border-t">
-                            <td class="py-1">{{ it.product.name }}</td>
-                            <td class="py-1 text-right">{{ it.quantity }} x Rs {{ it.unit_price }} = Rs {{ it.subtotal }}</td>
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div>
-                      <div class="text-sm font-semibold">Installment / Payments</div>
-                      <div class="mt-2 text-sm">
-                        {% if sale.installment_plan %}
-                          <div>Plan status: {{ sale.installment_plan.status }}</div>
-                          <div class="mt-1">
-                            <table class="w-full text-sm">
-                              <thead>
-                                <tr class="text-left text-gray-600"><th>Date</th><th class="text-right">Amount</th></tr>
-                              </thead>
-                              <tbody>
-                                {% for p in sale.installment_plan.payments.all %}
-                                  <tr class="border-t">
-                                    <td class="py-1">{{ p.payment_date }}</td>
-                                    <td class="py-1 text-right">Rs {{ p.amount_paid }}</td>
-                                  </tr>
-                                {% endfor %}
-                              </tbody>
-                            </table>
-                          </div>
-                        {% else %}
-                          <div class="text-sm text-gray-500">No installment plan for this sale.</div>
-                        {% endif %}
-                      </div>
-                    </div>
-                  </div>
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-5">
+        <h3 class="text-xl font-semibold text-gray-700 flex items-center border-b pb-3 mb-4">
+            <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8a6 6 0 00-6 6h12a6 6 0 00-6-6zM3 14h2a2 2 0 012 2v2a2 2 0 01-2 2H3a2 2 0 01-2-2v-2a2 2 0 012-2zm16 0h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2a2 2 0 012-2z"></path></svg>
+            Financial Summary
+        </h3>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="p-4 bg-indigo-50 rounded-lg text-center border border-indigo-200">
+                <div class="text-sm text-indigo-600 font-medium">Total Purchases</div>
+                <div class="text-3xl font-bold text-indigo-800 mt-1">Rs {{ total_amount|currency }}</div>
+            </div>
+            <div class="p-4 bg-teal-50 rounded-lg text-center border border-teal-200">
+                <div class="text-sm text-teal-600 font-medium">Total Paid</div>
+                <div class="text-3xl font-bold text-teal-800 mt-1">Rs {{ total_paid|currency }}</div>
+            </div>
+            <div class="p-4 rounded-lg text-center 
+                {% if total_remaining > 0 %} bg-red-50 border border-red-200 {% else %} bg-green-50 border border-green-200 {% endif %}">
+                <div class="text-sm font-medium 
+                    {% if total_remaining > 0 %} text-red-600 {% else %} text-green-600 {% endif %}">
+                    Remaining Balance
                 </div>
-              {% endfor %}
+                <div class="text-3xl font-bold mt-1 
+                    {% if total_remaining > 0 %} text-red-800 {% else %} text-green-800 {% endif %}">
+                    Rs {{ total_remaining|currency }}
+                </div>
             </div>
-
-            <div class="mt-4">
-              <nav class="flex justify-between text-sm">
-                {% if page_obj.has_previous %}
-                  <a href="?page={{ page_obj.previous_page_number }}" class="text-blue-600">&laquo; Prev</a>
-                {% else %}
-                  <span></span>
-                {% endif %}
-                <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-                {% if page_obj.has_next %}
-                  <a href="?page={{ page_obj.next_page_number }}" class="text-blue-600">Next &raquo;</a>
-                {% endif %}
-              </nav>
-            </div>
-          {% else %}
-            <p class="text-sm text-gray-500">No sales found for this customer.</p>
-          {% endif %}
         </div>
-      </div>
     </div>
-  </div>
+    
+    <div class="my-6"></div>
+
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-5">
+        <h3 class="text-xl font-semibold text-gray-700 flex items-center border-b pb-3 mb-4">
+            <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            Product Breakdown
+        </h3>
+        {% if purchased_list %}
+        <div class="mt-4 overflow-x-auto border rounded-lg shadow-sm">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Spent</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for item in purchased_list %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700">{{ item.product.name }}</td>
+                        <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-600">{{ item.quantity }}</td>
+                        <td class="px-6 py-3 whitespace-nowrap text-sm font-semibold text-right text-gray-800">Rs {{ item.spent|floatformat:2|currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-500 mt-3 p-3 bg-gray-50 rounded-lg">No products purchased yet by this customer.</p>
+        {% endif %}
+    </div>
+
+    <div class="my-6"></div>
+
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-5">
+    <h3 class="text-xl font-semibold text-gray-700 flex items-center border-b pb-3 mb-4">
+        <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-10 10h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+        Sales & Payments History
+    </h3>
+    <div class="mt-4">
+        {% if page_obj.object_list %}
+        <div class="space-y-4">
+            {% for sale in page_obj.object_list %}
+            <div class="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition duration-150 ease-in-out">
+                
+                <div class="flex items-center justify-between border-b pb-2 mb-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                        <div class="text-base font-semibold text-gray-800">
+                            Sale #{{ sale.id }} 
+                            <span class="text-sm font-medium text-indigo-600 ml-2">({{ sale.date|date:'Y-m-d' }})</span>
+                        </div>
+                        
+                        <div class="text-xs text-gray-600 mt-1 sm:mt-0">
+                            <span class="font-medium">Type:</span> {{ sale.payment_type }}
+                            
+                            {% if sale.installment_plan %}
+                                <span class="ml-3 font-medium">Plan:</span>
+                                {% if sale.installment_plan.status == 'COMPLETED' %}
+                                    <span class="ml-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Paid Off</span>
+                                {% elif sale.installment_plan.status == 'PENDING' %}
+                                    <span class="ml-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">Pending</span>
+                                {% else %}
+                                    <span class="ml-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">{{ sale.installment_plan.status }}</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="text-right flex items-center space-x-3">
+                        <div>
+                            <div class="text-xs text-gray-500 uppercase tracking-wider">Total Sale</div>
+                            <div class="text-xl font-extrabold text-indigo-700 leading-none">
+                                Rs {{ sale.total_amount|currency }}
+                            </div>
+                            
+                            {% if sale.remaining is not None %}
+                                <div class="text-xs font-semibold mt-0.5 
+                                    {% if sale.remaining > 0 %} text-red-600 {% else %} text-green-600 {% endif %}">
+                                    {% if sale.remaining > 0 %}
+                                        Due: Rs {{ sale.remaining|floatformat:2|currency }}
+                                    {% else %}
+                                        Paid: Rs 0.00
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            <a href="{% url 'sales:receipt_print' sale.id %}" target="_blank" class="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 border border-indigo-300 rounded-lg text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition shadow-sm">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17H7V7h10v10zM7 3h10a2 2 0 012 2v4H5V5a2 2 0 012-2z"></path></svg>
+                                Receipt
+                            </a>
+
+                            {% if sale.installment_plan and sale.remaining > 0 %}
+                                <a href="{% url 'sales:installment_payment_create' sale.installment_plan.id %}?sale={{ sale.id }}" title="Collect payment" aria-label="Collect payment" class="w-full inline-flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold py-1.5 transition duration-150 ease-in-out shadow-sm">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path></svg>
+                                    Pay
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-2">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-700 mb-2 border-b pb-1">Items Purchased:</div>
+                        <div class="overflow-x-auto border rounded-md shadow-sm">
+                            <table class="min-w-full text-sm">
+                                <tbody class="divide-y divide-gray-100">
+                                    {% for it in sale.items.all %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-2 px-3 text-gray-700 w-1/2">{{ it.product.name }}</td>
+                                        <td class="py-2 px-3 text-right text-gray-600 w-1/2">{{ it.quantity }} &times; Rs {{ it.unit_price|currency }} = <span class="font-semibold text-gray-800">Rs {{ it.subtotal|currency }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm font-semibold text-gray-700 mb-2 border-b pb-1">Installment Payments:</div>
+                        <div class="border rounded-md shadow-sm">
+                            {% if sale.installment_plan %}
+                                <div class="p-3 bg-indigo-50 text-xs font-semibold text-indigo-700 border-b">Plan Status: {{ sale.installment_plan.status }}</div>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full text-xs">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="py-2 px-3 text-left font-medium text-gray-600">Date</th>
+                                                <th class="py-2 px-3 text-right font-medium text-gray-600">Amount Paid</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            {% for p in sale.installment_plan.payments.all %}
+                                                <tr class="hover:bg-gray-100">
+                                                    <td class="py-1 px-3">{{ p.payment_date|date:'Y-m-d' }}</td>
+                                                    <td class="py-1 px-3 text-right font-semibold text-green-700">Rs {{ p.amount_paid|currency }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">No installment plan recorded for this sale.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-5 flex items-center justify-between border-t border-gray-200 pt-3">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-600 bg-white hover:bg-gray-100 transition">
+                    &laquo; Previous
+                </a>
+            {% else %}
+                <span class="px-3 py-1.5 text-sm text-gray-400"></span>
+            {% endif %}
+            
+            <span class="text-sm text-gray-600">
+                Page <span class="font-semibold text-gray-800">{{ page_obj.number }}</span> of <span class="font-semibold text-gray-800">{{ page_obj.paginator.num_pages }}</span>
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-600 bg-white hover:bg-gray-100 transition">
+                    Next &raquo;
+                </a>
+            {% else %}
+                <span class="px-3 py-1.5 text-sm text-gray-400"></span>
+            {% endif %}
+        </div>
+        
+        {% else %}
+        <p class="text-base text-gray-500 mt-3 p-4 bg-gray-50 rounded-lg">No sales records found for this customer yet.</p>
+        {% endif %}
+    </div>
+</div>
+</div>
 {% endblock %}

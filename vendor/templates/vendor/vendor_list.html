@@ -32,7 +32,7 @@
       <tbody class="bg-white divide-y divide-gray-200">
         {% for v in page_obj.object_list %}
           <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ v.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><a href="{% url 'vendor:vendor_detail' v.id %}" class="text-blue-600">{{ v.name }}</a></td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ v.phone|default:'—' }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ v.email|default:'—' }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ v.address|default:'—'|truncatechars:60 }}</td>

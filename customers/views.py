@@ -71,6 +71,23 @@ def customer_detail(request, pk):
 
     # All sales for this customer (paginated)
     sales_qs = Sale.objects.filter(customer=customer).select_related('created_by').prefetch_related('items__product', 'installment_plan__payments').order_by('-date')
+
+    # compute per-sale paid totals to show in template (avoid template-side aggregation)
+    for s in sales_qs:
+        s.total_paid = Decimal('0')
+        plan = getattr(s, 'installment_plan', None)
+        if plan:
+            for pmt in plan.payments.all():
+                s.total_paid += (pmt.amount_paid or Decimal('0'))
+        else:
+            # If there's no installment plan but the sale was paid in full (or marked completed),
+            # treat the sale as fully paid so templates don't show a due amount.
+            if (getattr(s, 'payment_type', '') and str(s.payment_type).upper() == 'FULL') or getattr(s, 'is_completed', False):
+                s.total_paid = (s.total_amount or Decimal('0'))
+
+        # remaining for this sale
+        s.remaining = (s.total_amount or Decimal('0')) - s.total_paid
+
     page_obj = Paginator(sales_qs, 10).get_page(request.GET.get('page'))
 
     # Aggregate totals and purchased products
@@ -87,6 +104,10 @@ def customer_detail(request, pk):
             for p in plan.payments.all():
                 paid_for_sale += (p.amount_paid or Decimal('0'))
             total_paid += paid_for_sale
+        else:
+            # Count full / completed sales as paid in the aggregate totals
+            if (getattr(s, 'payment_type', '') and str(s.payment_type).upper() == 'FULL') or getattr(s, 'is_completed', False):
+                total_paid += amt
 
         # accumulate products
         for it in s.items.all():
